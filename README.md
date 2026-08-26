@@ -1,6 +1,9 @@
-# Mautic AI Email Sections
+# Sales Snap AI Email Sections
 
 Generates MJML sections in Mautic's email builder from a plain text description, and edits sections that already exist.
+
+Maintained by [Alexander Zlobin](https://github.com/AlexanderZlobinM1) for
+[Sales Snap](https://sales-snap.com), based on the original Bloomidea plugin.
 
 ![Describing a section and generating it in place in the Mautic email builder](docs/demo.gif)
 

@@ -5,8 +5,8 @@ declare(strict_types=1);
 return [
     'name'        => 'AI Email Sections',
     'description' => 'Generates MJML sections in the email builder from a text description.',
-    'version'     => '1.1.5',
-    'author'      => 'Bloomidea',
+    'version'     => '1.1.6',
+    'author'      => 'Alexander Zlobin / Sales Snap',
 
     'routes' => [
         'main' => [

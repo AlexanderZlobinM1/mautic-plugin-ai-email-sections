@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.6 - 2026-08-27
+
+- Adapt the configuration form immediately when the provider receives focus or
+  changes, without disabling or clearing hidden settings.
+- Hide the manual endpoint for provider presets while keeping it available for
+  OpenAI-compatible and local models.
+- Hide temperature for Anthropic because its native client does not send that
+  parameter, without clearing any stored values when providers are switched.
+- Set Alexander Zlobin as the maintainer under the Sales Snap brand while
+  retaining the original Bloomidea attribution in the package metadata.
+
 ## 1.1.5 - 2026-08-26
 
 - Use `gemini-3.6-flash` as the Google Gemini default because Google no longer

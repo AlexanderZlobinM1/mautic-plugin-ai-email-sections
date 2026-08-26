@@ -15,8 +15,15 @@
         {
             "name": "Bloomidea",
             "homepage": "https://bloomidea.com"
+        },
+        {
+            "name": "Alexander Zlobin",
+            "email": "alexander.zlobin@m1.rs",
+            "homepage": "https://github.com/AlexanderZlobinM1",
+            "role": "Maintainer"
         }
     ],
+    "homepage": "https://sales-snap.com",
     "extra": {
         "install-directory-name": "AiEmailSectionsBundle"
     },

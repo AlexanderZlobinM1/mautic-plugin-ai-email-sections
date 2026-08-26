@@ -24,6 +24,8 @@ use Symfony\Component\Validator\Constraints\Length;
  */
 class ConfigFeaturesType extends AbstractType
 {
+    private const PROVIDER_UI_SCRIPT = "(function(s){var f=s.form,t=function(n,v){var e=f&&f.querySelector('[name$=\"['+n+']\"]'),r=e&&e.closest('.row.form-group');if(r){r.style.display=v?'':'none';}};t('base_url',s.value==='openai');t('temperature',s.value!=='anthropic');})(this)";
+
     public function __construct(private readonly ThemeCatalog $themeCatalog)
     {
     }
@@ -34,8 +36,11 @@ class ConfigFeaturesType extends AbstractType
             'label'      => 'mautic.aiemailsections.config.provider',
             'label_attr' => ['class' => 'control-label'],
             'attr'       => [
-                'class'   => 'form-control',
-                'tooltip' => 'mautic.aiemailsections.config.provider.tooltip',
+                'class'    => 'form-control',
+                'tooltip'  => 'mautic.aiemailsections.config.provider.tooltip',
+                'onfocus'  => self::PROVIDER_UI_SCRIPT,
+                'onclick'  => self::PROVIDER_UI_SCRIPT,
+                'onchange' => self::PROVIDER_UI_SCRIPT,
             ],
             'choices' => [
                 'mautic.aiemailsections.config.provider.openai'       => Config::PROVIDER_OPENAI,

@@ -136,6 +136,18 @@ final class ConfigFormTest extends MauticMysqlTestCase
         }
     }
 
+    public function testProviderUiKeepsHiddenSettingsInTheForm(): void
+    {
+        $form = $this->formFactory()->create(ConfigFeaturesType::class);
+
+        $this->assertTrue($form->has('base_url'));
+        $this->assertTrue($form->has('temperature'));
+        $this->assertStringContainsString(
+            "closest('.row.form-group')",
+            $form->get('provider')->getConfig()->getOption('attr')['onchange']
+        );
+    }
+
     private function formFactory(): FormFactoryInterface
     {
         return static::getContainer()->get('form.factory');
