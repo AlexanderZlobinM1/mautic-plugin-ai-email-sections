@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3 - 2026-08-26
+
+- Keep only the manual archive installation procedure in the operator guide.
+
 ## 1.1.2 - 2026-08-26
 
 - Make the MCC plugin catalog the primary installation path and remove the

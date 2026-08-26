@@ -18,13 +18,8 @@ The plugin has no additional runtime dependency and no frontend build step.
 
 ## Installation
 
-Install the plugin from the MCC plugin catalog. MCC places the release in the
-correct instance plugin directory and then runs the required Mautic reload and
-cache clear operations.
-
-For a manual non-MCC installation, unpack the tagged release as
-`AiEmailSectionsBundle` under the instance plugin directory, then reload the
-Mautic plugin registry and clear its cache:
+Unpack the tagged release as `AiEmailSectionsBundle` under the instance plugin
+directory, then reload the Mautic plugin registry and clear its cache:
 
 ```bash
 chown -R www-data:www-data AiEmailSectionsBundle
