@@ -85,7 +85,7 @@ final class ConfigTest extends MauticMysqlTestCase
      */
     public function testIgnoresAProviderItDoesNotKnow(): void
     {
-        $this->persistIntegration(['integration' => ['provider' => 'gemini']]);
+        $this->persistIntegration(['integration' => ['provider' => 'unknown-provider']]);
 
         $this->assertSame(Config::PROVIDER_OPENAI, $this->config()->getProvider());
     }
@@ -102,6 +102,33 @@ final class ConfigTest extends MauticMysqlTestCase
 
         $this->assertSame(Config::DEFAULT_ANTHROPIC_BASE_URL, $config->getBaseUrl());
         $this->assertSame(Config::DEFAULT_ANTHROPIC_MODEL, $config->getModel());
+    }
+
+    /**
+     * @dataProvider cloudProviderDefaults
+     */
+    public function testDefaultsEachCloudProvider(string $provider, string $baseUrl, string $model): void
+    {
+        $this->persistIntegration(['integration' => ['provider' => $provider]]);
+
+        $config = $this->config();
+        $this->assertSame($provider, $config->getProvider());
+        $this->assertSame($baseUrl, $config->getBaseUrl());
+        $this->assertSame($model, $config->getModel());
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function cloudProviderDefaults(): iterable
+    {
+        yield 'OpenAI' => [Config::PROVIDER_OPENAI_CLOUD, Config::DEFAULT_OPENAI_BASE_URL, Config::DEFAULT_OPENAI_MODEL];
+        yield 'Google Gemini' => [Config::PROVIDER_GOOGLE, Config::DEFAULT_GOOGLE_BASE_URL, Config::DEFAULT_GOOGLE_MODEL];
+        yield 'DeepSeek' => [Config::PROVIDER_DEEPSEEK, Config::DEFAULT_DEEPSEEK_BASE_URL, Config::DEFAULT_DEEPSEEK_MODEL];
+        yield 'Qwen' => [Config::PROVIDER_QWEN, Config::DEFAULT_QWEN_BASE_URL, Config::DEFAULT_QWEN_MODEL];
+        yield 'Groq' => [Config::PROVIDER_GROQ, Config::DEFAULT_GROQ_BASE_URL, Config::DEFAULT_GROQ_MODEL];
+        yield 'OpenRouter' => [Config::PROVIDER_OPENROUTER, Config::DEFAULT_OPENROUTER_BASE_URL, Config::DEFAULT_OPENROUTER_MODEL];
+        yield 'Anthropic' => [Config::PROVIDER_ANTHROPIC, Config::DEFAULT_ANTHROPIC_BASE_URL, Config::DEFAULT_ANTHROPIC_MODEL];
     }
 
     public function testAnExplicitBaseUrlStillWinsOverTheProviderDefault(): void

@@ -41,10 +41,7 @@ final class ConfigFormTest extends MauticMysqlTestCase
         }
     }
 
-    /**
-     * Only the two the factory knows how to build. Anything else silently
-     * falls back to the OpenAI-compatible client and talks the wrong protocol.
-     */
+    /** Every offered provider has a factory route or an OpenAI-compatible preset. */
     public function testTheProviderFieldOffersExactlyTheSupportedProviders(): void
     {
         $form = $this->formFactory()->create(ConfigFeaturesType::class);
@@ -52,7 +49,16 @@ final class ConfigFormTest extends MauticMysqlTestCase
         $choices = $form->get('provider')->getConfig()->getOption('choices');
 
         $this->assertSame(
-            [Config::PROVIDER_OPENAI, Config::PROVIDER_ANTHROPIC],
+            [
+                Config::PROVIDER_OPENAI,
+                Config::PROVIDER_OPENAI_CLOUD,
+                Config::PROVIDER_GOOGLE,
+                Config::PROVIDER_DEEPSEEK,
+                Config::PROVIDER_QWEN,
+                Config::PROVIDER_GROQ,
+                Config::PROVIDER_OPENROUTER,
+                Config::PROVIDER_ANTHROPIC,
+            ],
             array_values($choices)
         );
     }

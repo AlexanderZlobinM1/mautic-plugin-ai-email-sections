@@ -38,8 +38,14 @@ class ConfigFeaturesType extends AbstractType
                 'tooltip' => 'mautic.aiemailsections.config.provider.tooltip',
             ],
             'choices' => [
-                'mautic.aiemailsections.config.provider.openai'    => Config::PROVIDER_OPENAI,
-                'mautic.aiemailsections.config.provider.anthropic' => Config::PROVIDER_ANTHROPIC,
+                'mautic.aiemailsections.config.provider.openai'       => Config::PROVIDER_OPENAI,
+                'mautic.aiemailsections.config.provider.openai_cloud' => Config::PROVIDER_OPENAI_CLOUD,
+                'mautic.aiemailsections.config.provider.google'       => Config::PROVIDER_GOOGLE,
+                'mautic.aiemailsections.config.provider.deepseek'     => Config::PROVIDER_DEEPSEEK,
+                'mautic.aiemailsections.config.provider.qwen'         => Config::PROVIDER_QWEN,
+                'mautic.aiemailsections.config.provider.groq'         => Config::PROVIDER_GROQ,
+                'mautic.aiemailsections.config.provider.openrouter'   => Config::PROVIDER_OPENROUTER,
+                'mautic.aiemailsections.config.provider.anthropic'    => Config::PROVIDER_ANTHROPIC,
             ],
             // No "data" default: it would win over the stored value on every
             // render. With no placeholder the first choice, which is the

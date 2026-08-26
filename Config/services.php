@@ -28,6 +28,7 @@ return function (ContainerConfigurator $configurator): void {
         'Service/AnthropicClient.php',
         'Service/GenerationOutcome.php',
         'Service/GeneratorService.php',
+        'Service/GeminiClient.php',
         'Service/LlmClientInterface.php',
         'Service/MjmlValidator.php',
         'Service/OpenAiCompatibleClient.php',

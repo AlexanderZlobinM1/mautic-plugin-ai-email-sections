@@ -42,6 +42,18 @@ class GeneratorFactory
      */
     public function createClient(): LlmClientInterface
     {
+        if (Config::PROVIDER_GOOGLE === $this->config->getProvider()) {
+            return new GeminiClient(
+                $this->httpClient,
+                $this->config->getBaseUrl(),
+                $this->config->getApiKey(),
+                $this->config->getModel(),
+                $this->config->getTemperature(),
+                $this->config->getMaxTokens(),
+                $this->config->getTimeoutSeconds(),
+            );
+        }
+
         if (Config::PROVIDER_ANTHROPIC === $this->config->getProvider()) {
             return new AnthropicClient(
                 $this->httpClient,

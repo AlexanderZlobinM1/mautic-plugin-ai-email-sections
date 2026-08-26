@@ -10,6 +10,7 @@ use MauticPlugin\AiEmailSectionsBundle\Integration\AiEmailSectionsIntegration;
 use MauticPlugin\AiEmailSectionsBundle\Integration\Config;
 use MauticPlugin\AiEmailSectionsBundle\Service\AnthropicClient;
 use MauticPlugin\AiEmailSectionsBundle\Service\GeneratorFactory;
+use MauticPlugin\AiEmailSectionsBundle\Service\GeminiClient;
 use MauticPlugin\AiEmailSectionsBundle\Service\OpenAiCompatibleClient;
 
 /**
@@ -30,6 +31,33 @@ final class GeneratorFactoryTest extends MauticMysqlTestCase
         $this->persistIntegration(['integration' => ['provider' => Config::PROVIDER_ANTHROPIC]]);
 
         $this->assertInstanceOf(AnthropicClient::class, $this->factory()->createClient());
+    }
+
+    public function testBuildsTheGeminiClientWhenGoogleIsChosen(): void
+    {
+        $this->persistIntegration(['integration' => ['provider' => Config::PROVIDER_GOOGLE]]);
+
+        $this->assertInstanceOf(GeminiClient::class, $this->factory()->createClient());
+    }
+
+    /**
+     * @dataProvider openAiCompatibleCloudProviders
+     */
+    public function testBuildsTheOpenAiCompatibleClientForCompatibleCloudProviders(string $provider): void
+    {
+        $this->persistIntegration(['integration' => ['provider' => $provider]]);
+
+        $this->assertInstanceOf(OpenAiCompatibleClient::class, $this->factory()->createClient());
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function openAiCompatibleCloudProviders(): iterable
+    {
+        yield 'OpenAI' => [Config::PROVIDER_OPENAI_CLOUD];
+        yield 'DeepSeek' => [Config::PROVIDER_DEEPSEEK];
+        yield 'Qwen' => [Config::PROVIDER_QWEN];
+        yield 'Groq' => [Config::PROVIDER_GROQ];
+        yield 'OpenRouter' => [Config::PROVIDER_OPENROUTER];
     }
 
     /**

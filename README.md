@@ -10,7 +10,9 @@ It does not generate whole emails and it does not replace the theme. The theme s
 
 - Mautic 7.x (`mautic/core-lib: ^7.0`)
 - PHP 8.3
-- An LLM endpoint. Either something that speaks the OpenAI chat completions shape (OpenAI, LiteLLM, Ollama, LM Studio) or the Anthropic Messages API.
+- An LLM endpoint. Presets are included for OpenAI, Google Gemini, DeepSeek,
+  Qwen, Groq, OpenRouter and Anthropic. A generic OpenAI-compatible mode remains
+  available for LiteLLM, Ollama, LM Studio and other compatible endpoints.
 
 No Composer dependency of its own, and no frontend build step. Both are deliberate: the runtime Mautic image has no `composer.json`, so a plugin-level dependency would never be autoloaded in production.
 
@@ -19,7 +21,8 @@ No Composer dependency of its own, and no frontend build step. Both are delibera
 ### With Composer
 
 ```bash
-composer require bloomidea/mautic-plugin-ai-email-sections
+composer config repositories.ai-email-sections vcs https://github.com/AlexanderZlobinM1/mautic-plugin-ai-email-sections.git
+composer require bloomidea/mautic-plugin-ai-email-sections:1.1.0
 bin/console mautic:plugins:reload
 bin/console cache:clear
 ```
@@ -30,7 +33,7 @@ The official `mautic/mautic` Docker image ships no `composer.json`, so there `co
 
 ```bash
 cd /path/to/mautic/plugins          # or docroot/plugins on the Docker image
-git clone --branch v1.0.0 --depth 1 https://github.com/Bloomidea/mautic-plugin-ai-email-sections.git AiEmailSectionsBundle
+git clone --branch v1.1.0 --depth 1 https://github.com/AlexanderZlobinM1/mautic-plugin-ai-email-sections.git AiEmailSectionsBundle
 rm -rf AiEmailSectionsBundle/.git
 chown -R www-data:www-data AiEmailSectionsBundle
 cd /path/to/mautic
@@ -136,14 +139,29 @@ Turning the setting off entirely saves those ~550 input tokens per call and retu
 
 ### Providers
 
-**OpenAI-compatible** is the default and covers every endpoint that speaks the OpenAI chat completions shape.
+**OpenAI-compatible** remains the default for backward compatibility and covers
+every endpoint that speaks the OpenAI chat completions shape.
 
 | | Default |
 |---|---|
 | Base URL | `http://localhost:4000/v1` |
 | Model | `qwen2.5:32b` |
 
-For OpenAI itself, set the base URL to `https://api.openai.com/v1` and the model to `gpt-4o`. Their newer reasoning models replaced `max_tokens` with `max_completion_tokens` and stopped accepting `temperature`, so they need a client change and will otherwise return a 400.
+Cloud presets fill the endpoint and a production-safe default model when both
+fields are left empty:
+
+| Provider | Default base URL | Default model | Protocol |
+|---|---|---|---|
+| OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` | OpenAI Chat Completions |
+| Google Gemini | `https://generativelanguage.googleapis.com/v1beta` | `gemini-2.5-flash` | Gemini generateContent |
+| DeepSeek | `https://api.deepseek.com` | `deepseek-v4-flash` | OpenAI-compatible |
+| Qwen | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` | `qwen-plus` | OpenAI-compatible |
+| Groq | `https://api.groq.com/openai/v1` | `openai/gpt-oss-120b` | OpenAI-compatible |
+| OpenRouter | `https://openrouter.ai/api/v1` | `openai/gpt-4o-mini` | OpenAI-compatible |
+
+Qwen endpoints and keys are region-specific. The international endpoint is the
+default; replace it with the endpoint shown for the key's Model Studio region.
+An explicit base URL or model always overrides a preset.
 
 **Anthropic** talks to the Messages API directly.
 
@@ -226,7 +244,7 @@ GrapesJS (browser)                    Mautic (server)
                                         ▼
                                       GeneratorService
                                         ├─▶ PromptBuilder   system prompt + theme + few-shot
-                                        ├─▶ LlmClient       OpenAI-compatible | Anthropic
+                                        ├─▶ LlmClient       OpenAI-compatible | Gemini | Anthropic
                                         └─▶ MjmlValidator   allowlist + preservation
                                         │   (up to 3 attempts, feeding errors back)
   replaced in place   ◀── { mjml } ─────┘

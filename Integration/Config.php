@@ -17,12 +17,19 @@ use Mautic\PluginBundle\Entity\Integration;
 class Config
 {
     /**
-     * "openai" covers every endpoint that speaks the OpenAI shape: OpenAI
-     * itself, LiteLLM, Ollama, LM Studio. "anthropic" is the Messages API,
-     * which shares none of it and needs its own client.
+     * "openai" is the legacy generic mode and covers every endpoint that
+     * speaks the OpenAI shape, including LiteLLM, Ollama and LM Studio. Named
+     * cloud providers supply tested defaults without changing that stored
+     * value. Anthropic and Gemini use their native protocols.
      */
-    public const PROVIDER_OPENAI    = 'openai';
-    public const PROVIDER_ANTHROPIC = 'anthropic';
+    public const PROVIDER_OPENAI        = 'openai';
+    public const PROVIDER_OPENAI_CLOUD  = 'openai_cloud';
+    public const PROVIDER_GOOGLE        = 'google';
+    public const PROVIDER_DEEPSEEK      = 'deepseek';
+    public const PROVIDER_QWEN          = 'qwen';
+    public const PROVIDER_GROQ          = 'groq';
+    public const PROVIDER_OPENROUTER    = 'openrouter';
+    public const PROVIDER_ANTHROPIC     = 'anthropic';
 
     /**
      * Installs configured before this field existed have nothing stored and
@@ -33,6 +40,18 @@ class Config
     public const DEFAULT_BASE_URL       = 'http://localhost:4000/v1';
     public const DEFAULT_MODEL          = 'qwen2.5:32b';
 
+    public const DEFAULT_OPENAI_BASE_URL    = 'https://api.openai.com/v1';
+    public const DEFAULT_OPENAI_MODEL       = 'gpt-4o-mini';
+    public const DEFAULT_GOOGLE_BASE_URL    = 'https://generativelanguage.googleapis.com/v1beta';
+    public const DEFAULT_GOOGLE_MODEL       = 'gemini-2.5-flash';
+    public const DEFAULT_DEEPSEEK_BASE_URL  = 'https://api.deepseek.com';
+    public const DEFAULT_DEEPSEEK_MODEL     = 'deepseek-v4-flash';
+    public const DEFAULT_QWEN_BASE_URL      = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+    public const DEFAULT_QWEN_MODEL         = 'qwen-plus';
+    public const DEFAULT_GROQ_BASE_URL      = 'https://api.groq.com/openai/v1';
+    public const DEFAULT_GROQ_MODEL         = 'openai/gpt-oss-120b';
+    public const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+    public const DEFAULT_OPENROUTER_MODEL    = 'openai/gpt-4o-mini';
     public const DEFAULT_ANTHROPIC_BASE_URL = 'https://api.anthropic.com';
     /**
      * Sonnet rather than Opus on the strength of a 12-case comparison run
@@ -84,7 +103,7 @@ class Config
 
         // The value comes out of a database column rather than out of the
         // form, so it can hold anything. Falling back beats fataling.
-        return in_array($provider, [self::PROVIDER_OPENAI, self::PROVIDER_ANTHROPIC], true)
+        return in_array($provider, array_keys(self::providerDefaults()), true)
             ? $provider
             : self::DEFAULT_PROVIDER;
     }
@@ -95,9 +114,7 @@ class Config
      */
     public function getBaseUrl(): string
     {
-        $default = self::PROVIDER_ANTHROPIC === $this->getProvider()
-            ? self::DEFAULT_ANTHROPIC_BASE_URL
-            : self::DEFAULT_BASE_URL;
+        $default = self::providerDefaults()[$this->getProvider()]['base_url'];
 
         $url = $this->string('base_url', $default);
 
@@ -124,9 +141,7 @@ class Config
 
     public function getModel(): string
     {
-        $default = self::PROVIDER_ANTHROPIC === $this->getProvider()
-            ? self::DEFAULT_ANTHROPIC_MODEL
-            : self::DEFAULT_MODEL;
+        $default = self::providerDefaults()[$this->getProvider()]['model'];
 
         return $this->string('model', $default);
     }
@@ -254,5 +269,22 @@ class Config
         $settings = $this->getFeatureSettings();
 
         return isset($settings[$key]) && '' !== $settings[$key] ? (int) $settings[$key] : $default;
+    }
+
+    /**
+     * @return array<string, array{base_url: string, model: string}>
+     */
+    private static function providerDefaults(): array
+    {
+        return [
+            self::PROVIDER_OPENAI       => ['base_url' => self::DEFAULT_BASE_URL, 'model' => self::DEFAULT_MODEL],
+            self::PROVIDER_OPENAI_CLOUD => ['base_url' => self::DEFAULT_OPENAI_BASE_URL, 'model' => self::DEFAULT_OPENAI_MODEL],
+            self::PROVIDER_GOOGLE       => ['base_url' => self::DEFAULT_GOOGLE_BASE_URL, 'model' => self::DEFAULT_GOOGLE_MODEL],
+            self::PROVIDER_DEEPSEEK     => ['base_url' => self::DEFAULT_DEEPSEEK_BASE_URL, 'model' => self::DEFAULT_DEEPSEEK_MODEL],
+            self::PROVIDER_QWEN         => ['base_url' => self::DEFAULT_QWEN_BASE_URL, 'model' => self::DEFAULT_QWEN_MODEL],
+            self::PROVIDER_GROQ         => ['base_url' => self::DEFAULT_GROQ_BASE_URL, 'model' => self::DEFAULT_GROQ_MODEL],
+            self::PROVIDER_OPENROUTER   => ['base_url' => self::DEFAULT_OPENROUTER_BASE_URL, 'model' => self::DEFAULT_OPENROUTER_MODEL],
+            self::PROVIDER_ANTHROPIC    => ['base_url' => self::DEFAULT_ANTHROPIC_BASE_URL, 'model' => self::DEFAULT_ANTHROPIC_MODEL],
+        ];
     }
 }
