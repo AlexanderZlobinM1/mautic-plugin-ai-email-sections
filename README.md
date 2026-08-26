@@ -14,27 +14,19 @@ It does not generate whole emails and it does not replace the theme. The theme s
   Qwen, Groq, OpenRouter and Anthropic. A generic OpenAI-compatible mode remains
   available for LiteLLM, Ollama, LM Studio and other compatible endpoints.
 
-No Composer dependency of its own, and no frontend build step. Both are deliberate: the runtime Mautic image has no `composer.json`, so a plugin-level dependency would never be autoloaded in production.
+The plugin has no additional runtime dependency and no frontend build step.
 
 ## Installation
 
-### With Composer
+Install the plugin from the MCC plugin catalog. MCC places the release in the
+correct instance plugin directory and then runs the required Mautic reload and
+cache clear operations.
+
+For a manual non-MCC installation, unpack the tagged release as
+`AiEmailSectionsBundle` under the instance plugin directory, then reload the
+Mautic plugin registry and clear its cache:
 
 ```bash
-composer config repositories.ai-email-sections vcs https://github.com/AlexanderZlobinM1/mautic-plugin-ai-email-sections.git
-composer require bloomidea/mautic-plugin-ai-email-sections:1.1.1
-bin/console mautic:plugins:reload
-bin/console cache:clear
-```
-
-### Without Composer
-
-The official `mautic/mautic` Docker image ships no `composer.json`, so there `composer require` is not an option. Clone by tag instead:
-
-```bash
-cd /path/to/mautic/plugins          # or docroot/plugins on the Docker image
-git clone --branch v1.1.1 --depth 1 https://github.com/AlexanderZlobinM1/mautic-plugin-ai-email-sections.git AiEmailSectionsBundle
-rm -rf AiEmailSectionsBundle/.git
 chown -R www-data:www-data AiEmailSectionsBundle
 cd /path/to/mautic
 bin/console mautic:plugins:reload

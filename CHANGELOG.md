@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2 - 2026-08-26
+
+- Make the MCC plugin catalog the primary installation path and remove the
+  unsupported Composer installation procedure from the operator guide.
+
 ## 1.1.1 - 2026-08-26
 
 - Declare and verify compatibility with Mautic 6 in addition to Mautic 7.
