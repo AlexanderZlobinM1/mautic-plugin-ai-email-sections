@@ -140,7 +140,7 @@ fields are left empty:
 | Provider | Default base URL | Default model | Protocol |
 |---|---|---|---|
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` | OpenAI Chat Completions |
-| Google Gemini | `https://generativelanguage.googleapis.com/v1beta` | `gemini-2.5-flash` | Gemini generateContent |
+| Google Gemini | `https://generativelanguage.googleapis.com/v1beta` | `gemini-3.6-flash` | Gemini generateContent |
 | DeepSeek | `https://api.deepseek.com` | `deepseek-v4-flash` | OpenAI-compatible |
 | Qwen | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` | `qwen-plus` | OpenAI-compatible |
 | Groq | `https://api.groq.com/openai/v1` | `openai/gpt-oss-120b` | OpenAI-compatible |

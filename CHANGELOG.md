@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.5 - 2026-08-26
+
+- Use `gemini-3.6-flash` as the Google Gemini default because Google no longer
+  makes the previous `gemini-2.5-flash` model available to new API users.
+- Preserve explicitly configured model names for existing installations.
+
 ## 1.1.4 - 2026-08-26
 
 - Release the PHP session lock before the long-running AI provider request so

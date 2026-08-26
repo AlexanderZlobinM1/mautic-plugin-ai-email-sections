@@ -43,7 +43,7 @@ class Config
     public const DEFAULT_OPENAI_BASE_URL    = 'https://api.openai.com/v1';
     public const DEFAULT_OPENAI_MODEL       = 'gpt-4o-mini';
     public const DEFAULT_GOOGLE_BASE_URL    = 'https://generativelanguage.googleapis.com/v1beta';
-    public const DEFAULT_GOOGLE_MODEL       = 'gemini-2.5-flash';
+    public const DEFAULT_GOOGLE_MODEL       = 'gemini-3.6-flash';
     public const DEFAULT_DEEPSEEK_BASE_URL  = 'https://api.deepseek.com';
     public const DEFAULT_DEEPSEEK_MODEL     = 'deepseek-v4-flash';
     public const DEFAULT_QWEN_BASE_URL      = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
