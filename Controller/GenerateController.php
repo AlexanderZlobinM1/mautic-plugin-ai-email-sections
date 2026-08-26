@@ -21,6 +21,7 @@ use MauticPlugin\AiEmailSectionsBundle\Exception\LlmUnavailableException;
 use MauticPlugin\AiEmailSectionsBundle\Integration\Config;
 use MauticPlugin\AiEmailSectionsBundle\Service\GeneratorFactory;
 use MauticPlugin\AiEmailSectionsBundle\Service\PromptBuilder;
+use MauticPlugin\AiEmailSectionsBundle\Service\RequestSessionReleaser;
 use MauticPlugin\AiEmailSectionsBundle\Service\ThemeCatalog;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -62,6 +63,7 @@ class GenerateController extends AjaxController
         CsrfTokenManagerInterface $csrfTokenManager,
         EntityManagerInterface $entityManager,
         ThemeCatalog $themeCatalog,
+        RequestSessionReleaser $sessionReleaser,
     ): JsonResponse {
         // Mautic's global CSRF guard only runs when the request carries the
         // X-Requested-With header, and returns 200 on failure. Here it is explicit
@@ -146,6 +148,8 @@ class GenerateController extends AjaxController
             ->setPrompt($prompt)
             ->setSourceMjml($source)
             ->setModel($config->getModel());
+
+        $sessionReleaser->release($request);
 
         try {
             $outcome = $generatorFactory->create()->generate($mode, $prompt, $source, $themeId);
