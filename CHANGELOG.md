@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1 - 2026-08-26
+
+- Declare and verify compatibility with Mautic 6 in addition to Mautic 7.
+- Keep the same integration, builder, provider and security behavior on both
+  supported Mautic majors.
+
 ## 1.1.0 - 2026-08-26
 
 - Add provider presets for OpenAI, Google Gemini, DeepSeek, Qwen, Groq and

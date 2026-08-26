@@ -8,7 +8,7 @@ It does not generate whole emails and it does not replace the theme. The theme s
 
 ## Requirements
 
-- Mautic 7.x (`mautic/core-lib: ^7.0`)
+- Mautic 6.x or 7.x (`mautic/core-lib: ^6.0 || ^7.0`)
 - PHP 8.3
 - An LLM endpoint. Presets are included for OpenAI, Google Gemini, DeepSeek,
   Qwen, Groq, OpenRouter and Anthropic. A generic OpenAI-compatible mode remains
@@ -22,7 +22,7 @@ No Composer dependency of its own, and no frontend build step. Both are delibera
 
 ```bash
 composer config repositories.ai-email-sections vcs https://github.com/AlexanderZlobinM1/mautic-plugin-ai-email-sections.git
-composer require bloomidea/mautic-plugin-ai-email-sections:1.1.0
+composer require bloomidea/mautic-plugin-ai-email-sections:1.1.1
 bin/console mautic:plugins:reload
 bin/console cache:clear
 ```
@@ -33,7 +33,7 @@ The official `mautic/mautic` Docker image ships no `composer.json`, so there `co
 
 ```bash
 cd /path/to/mautic/plugins          # or docroot/plugins on the Docker image
-git clone --branch v1.1.0 --depth 1 https://github.com/AlexanderZlobinM1/mautic-plugin-ai-email-sections.git AiEmailSectionsBundle
+git clone --branch v1.1.1 --depth 1 https://github.com/AlexanderZlobinM1/mautic-plugin-ai-email-sections.git AiEmailSectionsBundle
 rm -rf AiEmailSectionsBundle/.git
 chown -R www-data:www-data AiEmailSectionsBundle
 cd /path/to/mautic
