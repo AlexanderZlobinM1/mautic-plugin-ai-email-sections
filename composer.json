@@ -1,6 +1,6 @@
 {
     "name": "bloomidea/mautic-plugin-ai-email-sections",
-    "description": "Generates MJML sections in the GrapesJS email builder from a text description, with allowlist validation and preservation invariants.",
+    "description": "Sales Snap AI assistant for Mautic email sections and new segment filter plans.",
     "type": "mautic-plugin",
     "license": "GPL-3.0-or-later",
     "keywords": [
@@ -9,6 +9,7 @@
         "grapesjs",
         "mjml",
         "email",
+        "segments",
         "ai"
     ],
     "authors": [

@@ -48,3 +48,19 @@
  * puts its rightmost buttons underneath the wider panel. Anchor it to the
  * panel edge instead. */
 .gjs-pn-options { right: 300px; }
+
+/* Native new-segment form assistant. */
+.ai-segment-assistant {
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid #d5dbe5;
+  border-radius: 4px;
+  background: #f7f8fa;
+}
+.ai-segment-assistant__title { margin-bottom: 8px; font-weight: 600; }
+.ai-segment-assistant__prompt { width: 100%; resize: vertical; }
+.ai-segment-assistant__actions { margin-top: 8px; }
+.ai-segment-assistant__status { min-height: 20px; margin-top: 8px; font-size: 13px; }
+.ai-segment-assistant__status.is-error { color: #c92a2a; }
+.ai-segment-assistant__status.is-success { color: #18794e; }
+.ai-segment-assistant__status.is-loading { color: #586174; }

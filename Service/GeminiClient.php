@@ -10,7 +10,7 @@ use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /** Google Gemini generateContent client. */
-final class GeminiClient implements LlmClientInterface
+final class GeminiClient implements JsonLlmClientInterface
 {
     public function __construct(
         private readonly HttpClientInterface $http,
@@ -25,6 +25,19 @@ final class GeminiClient implements LlmClientInterface
 
     public function complete(array $messages): string
     {
+        return $this->request($messages, false);
+    }
+
+    public function completeJson(array $messages): string
+    {
+        return $this->request($messages, true);
+    }
+
+    /**
+     * @param array<int, array{role: string, content: string}> $messages
+     */
+    private function request(array $messages, bool $jsonOnly): string
+    {
         [$system, $contents] = $this->convertMessages($messages);
         $payload             = [
             'contents'         => $contents,
@@ -33,6 +46,11 @@ final class GeminiClient implements LlmClientInterface
                 'maxOutputTokens' => $this->maxTokens,
             ],
         ];
+
+        if ($jsonOnly) {
+            $payload['generationConfig']['responseMimeType'] = 'application/json';
+            $payload['generationConfig']['maxOutputTokens']  = max(4096, $this->maxTokens);
+        }
 
         if ('' !== $system) {
             $payload['systemInstruction'] = ['parts' => [['text' => $system]]];

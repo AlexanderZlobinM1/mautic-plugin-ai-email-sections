@@ -18,10 +18,12 @@ use MauticPlugin\AiEmailSectionsBundle\Entity\Generation;
 use MauticPlugin\AiEmailSectionsBundle\Entity\GenerationRepository;
 use MauticPlugin\AiEmailSectionsBundle\Exception\GenerationFailedException;
 use MauticPlugin\AiEmailSectionsBundle\Exception\LlmUnavailableException;
+use MauticPlugin\AiEmailSectionsBundle\Exception\SegmentPlanException;
 use MauticPlugin\AiEmailSectionsBundle\Integration\Config;
 use MauticPlugin\AiEmailSectionsBundle\Service\GeneratorFactory;
 use MauticPlugin\AiEmailSectionsBundle\Service\PromptBuilder;
 use MauticPlugin\AiEmailSectionsBundle\Service\RequestSessionReleaser;
+use MauticPlugin\AiEmailSectionsBundle\Service\SegmentAssistant;
 use MauticPlugin\AiEmailSectionsBundle\Service\ThemeCatalog;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -35,6 +37,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 class GenerateController extends AjaxController
 {
     private const MAX_PROMPT_LENGTH = 2000;
+    private const MAX_SEGMENT_CATALOG_BYTES = 250000;
 
     /**
      * @param ModelFactory<AbstractCommonModel<object>> $modelFactory
@@ -189,6 +192,65 @@ class GenerateController extends AjaxController
             'attempts' => $outcome->attempts,
             'warnings' => $outcome->warnings,
         ]);
+    }
+
+    public function segmentPlanAction(
+        Request $request,
+        Config $config,
+        SegmentAssistant $assistant,
+        CorePermissions $permissions,
+        CsrfTokenManagerInterface $csrfTokenManager,
+        RequestSessionReleaser $sessionReleaser,
+    ): JsonResponse {
+        $token = (string) $request->headers->get('X-CSRF-Token', '');
+        if (!$csrfTokenManager->isTokenValid(new CsrfToken('mautic_ajax_post', $token))) {
+            return $this->error('csrf', 'mautic.aiemailsections.error.session_expired', Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$config->isPublished()) {
+            return $this->error('disabled', 'mautic.aiemailsections.error.disabled', Response::HTTP_FORBIDDEN);
+        }
+
+        if ((!$permissions->isAdmin() && !$permissions->isGranted('aiemailsections:generations:create'))
+            || !$permissions->isGranted('lead:lists:create')
+        ) {
+            return $this->error('forbidden', 'mautic.aiemailsections.error.forbidden', Response::HTTP_FORBIDDEN);
+        }
+
+        // This endpoint exists only to fill the unsaved new-segment form. It
+        // must not become a hidden editor for an existing segment.
+        $refererPath = parse_url((string) $request->headers->get('referer', ''), PHP_URL_PATH);
+        if (!is_string($refererPath) || 1 !== preg_match('~/s/segments/new/?$~', $refererPath)) {
+            return $this->error('create_only', 'mautic.aiemailsections.segment.error.create_only', Response::HTTP_FORBIDDEN);
+        }
+
+        $payload = $request->toArray();
+        $prompt  = trim((string) ($payload['prompt'] ?? ''));
+        $catalog = $payload['catalog'] ?? null;
+
+        if ('' === $prompt || mb_strlen($prompt) > self::MAX_PROMPT_LENGTH || !is_array($catalog) || [] === $catalog) {
+            return $this->error('bad_request', 'mautic.aiemailsections.error.bad_request', Response::HTTP_BAD_REQUEST);
+        }
+
+        if (strlen(json_encode($catalog, JSON_THROW_ON_ERROR)) > self::MAX_SEGMENT_CATALOG_BYTES) {
+            return $this->error('catalog_too_large', 'mautic.aiemailsections.segment.error.catalog', Response::HTTP_BAD_REQUEST);
+        }
+
+        $sessionReleaser->release($request);
+
+        try {
+            return new JsonResponse($assistant->generate($prompt, $catalog));
+        } catch (SegmentPlanException $exception) {
+            $this->logger->warning('AI segment plan was rejected.', ['reason' => $exception->getMessage()]);
+
+            return new JsonResponse([
+                'error'   => 'invalid_plan',
+                'message' => $this->translator->trans('mautic.aiemailsections.segment.error.invalid_plan'),
+                'details' => $exception->getMessage(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (LlmUnavailableException $exception) {
+            return $this->error('provider_unavailable', 'mautic.aiemailsections.error.provider_unavailable', Response::HTTP_BAD_GATEWAY);
+        }
     }
 
     private function overRateLimit(GenerationRepository $repository, int $userId, Config $config): bool

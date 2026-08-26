@@ -58,6 +58,25 @@ final class GeminiClientTest extends TestCase
         $this->client($http)->complete([['role' => 'user', 'content' => 'hello']]);
     }
 
+    public function testRequestsStructuredJsonWithoutChangingNormalCompletions(): void
+    {
+        $seen = new \stdClass();
+        $http = new MockHttpClient(function (string $method, string $url, array $options) use ($seen): MockResponse {
+            $seen->body = $options['body'] ?? '';
+
+            return new MockResponse('{"candidates":[{"content":{"parts":[{"text":"{\\"groups\\":[]}"}]}}]}');
+        });
+
+        $this->assertSame(
+            '{"groups":[]}',
+            $this->client($http)->completeJson([['role' => 'user', 'content' => 'Create a segment plan']])
+        );
+
+        $payload = json_decode((string) $seen->body, true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('application/json', $payload['generationConfig']['responseMimeType']);
+        $this->assertSame(4096, $payload['generationConfig']['maxOutputTokens']);
+    }
+
     private function client(MockHttpClient $http): GeminiClient
     {
         return new GeminiClient(

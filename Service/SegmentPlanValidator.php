@@ -1,0 +1,180 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MauticPlugin\AiEmailSectionsBundle\Service;
+
+use MauticPlugin\AiEmailSectionsBundle\Exception\SegmentPlanException;
+
+final class SegmentPlanValidator
+{
+    private const MAX_GROUPS = 10;
+    private const MAX_CONDITIONS = 30;
+    private const MAX_VALUE_ITEMS = 100;
+
+    /**
+     * @param mixed[] $plan
+     * @param mixed[] $catalog
+     *
+     * @return array{groups: array<int, array{conditions: array<int, array{object: string, field: string, operator: string, value: mixed, display?: string}>}>, summary: string}
+     */
+    public function validate(array $plan, array $catalog): array
+    {
+        $allowed = $this->allowedFields($catalog);
+        $groups  = $plan['groups'] ?? null;
+
+        if (!is_array($groups) || [] === $groups || count($groups) > self::MAX_GROUPS) {
+            throw new SegmentPlanException('The generated segment has an invalid number of groups.');
+        }
+
+        $normalized = [];
+        $total      = 0;
+
+        foreach ($groups as $group) {
+            $conditions = is_array($group) ? ($group['conditions'] ?? null) : null;
+            if (!is_array($conditions) || [] === $conditions) {
+                throw new SegmentPlanException('The generated segment contains an empty group.');
+            }
+
+            $normalizedConditions = [];
+            foreach ($conditions as $condition) {
+                if (!is_array($condition)) {
+                    throw new SegmentPlanException('The generated segment contains an invalid condition.');
+                }
+
+                ++$total;
+                if ($total > self::MAX_CONDITIONS) {
+                    throw new SegmentPlanException('The generated segment contains too many conditions.');
+                }
+
+                $object   = $this->identifier($condition['object'] ?? null);
+                $field    = $this->identifier($condition['field'] ?? null);
+                $operator = $this->operator($condition['operator'] ?? null);
+                $key      = $object."\0".$field;
+
+                if (isset($allowed[$key])) {
+                    $operator = $this->normalizeOperator($operator, $allowed[$key]);
+                }
+
+                if (!isset($allowed[$key]) || !in_array($operator, $allowed[$key], true)) {
+                    throw new SegmentPlanException(sprintf('The generated condition %s.%s is not offered by this Mautic.', $object, $field));
+                }
+
+                $normalizedCondition = [
+                    'object'   => $object,
+                    'field'    => $field,
+                    'operator' => $operator,
+                    'value'    => $this->value($condition['value'] ?? null),
+                ];
+
+                if (isset($condition['display']) && is_scalar($condition['display'])) {
+                    $normalizedCondition['display'] = mb_substr(trim((string) $condition['display']), 0, 250);
+                }
+
+                $normalizedConditions[] = $normalizedCondition;
+            }
+
+            $normalized[] = ['conditions' => $normalizedConditions];
+        }
+
+        $summary = isset($plan['summary']) && is_scalar($plan['summary'])
+            ? mb_substr(trim((string) $plan['summary']), 0, 500)
+            : '';
+
+        return ['groups' => $normalized, 'summary' => $summary];
+    }
+
+    /**
+     * @param mixed[] $catalog
+     *
+     * @return array<string, string[]>
+     */
+    private function allowedFields(array $catalog): array
+    {
+        $allowed = [];
+
+        foreach ($catalog as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+
+            try {
+                $object = $this->identifier($field['object'] ?? null);
+                $alias  = $this->identifier($field['field'] ?? null);
+            } catch (SegmentPlanException) {
+                continue;
+            }
+
+            $operators = [];
+            foreach (is_array($field['operators'] ?? null) ? $field['operators'] : [] as $operator) {
+                if (is_array($operator) && isset($operator['value']) && is_scalar($operator['value'])) {
+                    $operators[] = (string) $operator['value'];
+                }
+            }
+
+            if ([] !== $operators) {
+                $allowed[$object."\0".$alias] = array_values(array_unique($operators));
+            }
+        }
+
+        return $allowed;
+    }
+
+    private function identifier(mixed $value): string
+    {
+        if (!is_string($value) || 1 !== preg_match('/\A[a-zA-Z0-9_.:-]{1,190}\z/', $value)) {
+            throw new SegmentPlanException('The generated segment contains an invalid identifier.');
+        }
+
+        return $value;
+    }
+
+    private function operator(mixed $value): string
+    {
+        if (!is_string($value) || '' === $value || mb_strlen($value) > 40) {
+            throw new SegmentPlanException('The generated segment contains an invalid operator.');
+        }
+
+        return $value;
+    }
+
+    /** @param string[] $allowed */
+    private function normalizeOperator(string $operator, array $allowed): string
+    {
+        $aliases = [
+            '>'  => 'gt',
+            '>=' => 'gte',
+            '<'  => 'lt',
+            '<=' => 'lte',
+        ];
+        $normalized = $aliases[$operator] ?? $operator;
+
+        return in_array($normalized, $allowed, true) ? $normalized : $operator;
+    }
+
+    private function value(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            if (count($value) > self::MAX_VALUE_ITEMS) {
+                throw new SegmentPlanException('The generated condition contains too many values.');
+            }
+
+            return array_map(fn (mixed $item): string|int|float|bool|null => $this->scalarValue($item), array_values($value));
+        }
+
+        return $this->scalarValue($value);
+    }
+
+    private function scalarValue(mixed $value): string|int|float|bool|null
+    {
+        if (null === $value || is_int($value) || is_float($value) || is_bool($value)) {
+            return $value;
+        }
+
+        if (!is_string($value)) {
+            throw new SegmentPlanException('The generated condition contains an invalid value.');
+        }
+
+        return mb_substr($value, 0, 2000);
+    }
+}

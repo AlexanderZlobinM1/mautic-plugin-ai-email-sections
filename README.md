@@ -1,6 +1,16 @@
-# Sales Snap AI Email Sections
+# Sales Snap AI Assistant
 
 Generates MJML sections in Mautic's email builder from a plain text description, and edits sections that already exist.
+
+On the new-segment page it can also translate a natural-language audience
+description into native Mautic filter controls. It never saves, publishes,
+edits, or rebuilds a segment. The operator reviews the generated conditions and
+saves the segment through Mautic's normal form.
+
+The segment assistant reads the field aliases, types, and operators rendered by
+the current Mautic form. Filters contributed by installed plugins therefore
+become available automatically. Generated fields and operators are checked
+against that live catalog before anything is inserted into the form.
 
 Maintained by [Alexander Zlobin](https://github.com/AlexanderZlobinM1) for
 [Sales Snap](https://sales-snap.com), based on the original Bloomidea plugin.

@@ -1,13 +1,13 @@
 {
   "name": "ai-email-sections",
-  "version": "1.1.6",
-  "description": "AI Email Sections plugin for Mautic's MJML email builder.",
+  "version": "2.0.0",
+  "description": "Sales Snap AI assistant for Mautic email sections and new segment filters.",
   "author": "Alexander Zlobin <alexander.zlobin@m1.rs> (https://github.com/AlexanderZlobinM1)",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
     "test": "jest",
-    "build": "cp Assets/src/index.js Assets/dist/index.js"
+    "build": "cp Assets/src/index.js Assets/dist/index.js && cp Assets/src/segment.js Assets/dist/segment.js"
   },
   "devDependencies": {
     "jest": "^29.7.0",

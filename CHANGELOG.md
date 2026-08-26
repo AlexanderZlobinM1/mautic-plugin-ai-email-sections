@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.0.0 - 2026-08-27
+
+- Add an AI assistant to the new-segment form that converts natural-language
+  audience descriptions into native Mautic filter controls.
+- Limit segment assistance to creation: it never appears on edit pages and
+  never saves, publishes, rebuilds, or executes a segment.
+- Build the model catalog from the exact fields and operators rendered by the
+  current Mautic, including filters contributed by installed plugins.
+- Validate every generated object, field, and operator against that live
+  catalog before filling the form, and roll back the inserted controls if a
+  choice or lookup value cannot be resolved.
+- Use Gemini's structured JSON response mode for segment plans and retry one
+  rejected response without changing normal email-section generation.
+- Wait for Mautic's native asynchronous filter controls before applying values,
+  preventing a late core response from overwriting AI-prepared conditions.
+- Express Mautic logic as OR groups containing AND conditions and document
+  relative date semantics for requests such as "within the last 10 days".
+- Rename the displayed integration to Sales Snap AI Assistant while retaining
+  the existing integration identity and all email-section functionality.
+
 ## 1.1.6 - 2026-08-27
 
 - Adapt the configuration form immediately when the provider receives focus or
