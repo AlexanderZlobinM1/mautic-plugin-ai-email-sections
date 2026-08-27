@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.3 - 2026-08-27
+
+- Interpret requests about opening, visiting, viewing, browsing, or accessing a
+  site as page-hit behavior and keep the live URL filters in the model catalog.
+- Prevent the segment assistant from substituting a company website profile
+  field for a requested page visit.
+- Normalize an AND-only request into one Mautic filter group when a small model
+  incorrectly returns separate OR groups, while preserving explicit OR logic.
+
 ## 2.0.2 - 2026-08-27
 
 - Keep the new-segment assistant available after Mautic replaces admin content

@@ -12,6 +12,7 @@ final class SegmentAssistant
         private readonly GeneratorFactory $generatorFactory,
         private readonly SegmentPromptBuilder $promptBuilder,
         private readonly SegmentPlanValidator $validator,
+        private readonly SegmentPlanLogicNormalizer $logicNormalizer,
     ) {
     }
 
@@ -32,7 +33,7 @@ final class SegmentAssistant
                 : $client->complete($messages);
 
             try {
-                return $this->decodeAndValidate($raw, $catalog);
+                return $this->decodeAndValidate($request, $raw, $catalog);
             } catch (SegmentPlanException $exception) {
                 $lastError = $exception;
                 if (1 === $attempt) {
@@ -58,7 +59,7 @@ final class SegmentAssistant
      *
      * @return array{groups: mixed[], summary: string}
      */
-    private function decodeAndValidate(string $raw, array $catalog): array
+    private function decodeAndValidate(string $request, string $raw, array $catalog): array
     {
         $json = $this->extractJson($raw);
 
@@ -72,7 +73,7 @@ final class SegmentAssistant
             throw new SegmentPlanException('The model did not return a segment plan.');
         }
 
-        return $this->validator->validate($plan, $catalog);
+        return $this->validator->validate($this->logicNormalizer->normalize($request, $plan), $catalog);
     }
 
     private function extractJson(string $raw): string

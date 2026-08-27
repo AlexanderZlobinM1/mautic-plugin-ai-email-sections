@@ -6,7 +6,7 @@ Mautic's segment builder has this logical shape:
 - Conditions inside one group are joined with AND.
 - Separate groups are joined with OR.
 - Return disjunctive normal form: an OR array of groups, each containing an AND array of conditions.
-- If the request only contains AND conditions, return one group.
+- If the request only contains AND conditions, return exactly one group. Words such as "and", "all", "both", and their equivalents mean the requested conditions belong in that same group; never split them into separate groups.
 - Do not silently weaken or omit a requested condition. If no catalog field can express it, return `{"error":"..."}` instead of guessing.
 
 Date rules:
@@ -17,6 +17,8 @@ Date rules:
 - A prebuilt filter such as "URL in last 7/14/30 days" is valid only for that exact interval. For another interval, combine the generic event identity filter (for example the requested URL) with the matching generic event date filter. Never invent a prebuilt interval alias.
 
 Value rules:
+- A request saying that a contact visited, opened, viewed, browsed, or accessed a site, website, page, or URL describes page-hit behavior. Use the matching live behavior field such as `hit_url`; never use a company `website`/`companywebsite` profile field for that activity. A company website field is valid only when the operator explicitly asks about the website stored on a company record.
+- "First name" describes the contact `firstname` field, not a company name field.
 - For select, multiselect, campaign, segment, tag, device, email, and plugin choice fields, prefer an exact catalog/UI value when it is known. Otherwise return the operator's literal requested label in `value`; the UI will resolve it against the field's live choices before applying anything.
 - For lookup fields, put a known numeric ID in `value`. If only a human name is known, put the name in both `value` and `display`; the UI will resolve it through Mautic's lookup endpoint.
 - Use arrays for `in` and `!in` when multiple values are requested.

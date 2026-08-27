@@ -49,11 +49,14 @@ final class SegmentPromptBuilder
      */
     private function relevantCatalog(string $request, array $catalog): array
     {
+        $catalog = $this->contextualCatalog($request, $catalog);
+
         if (count($catalog) <= self::MAX_CATALOG_FIELDS) {
             return $catalog;
         }
 
         $terms = $this->terms($request);
+        $requestText = $this->normalise($request);
         $ranked = [];
 
         foreach ($catalog as $position => $field) {
@@ -65,6 +68,10 @@ final class SegmentPromptBuilder
             $alias  = $this->normalise((string) ($field['field'] ?? ''));
             $object = $this->normalise((string) ($field['object'] ?? ''));
             $score  = 0;
+
+            if ('' !== $label && str_contains($requestText, $label)) {
+                $score += 40;
+            }
 
             foreach ($terms as $term) {
                 if (str_contains($label, $term)) {
@@ -91,6 +98,53 @@ final class SegmentPromptBuilder
         ));
     }
 
+    /**
+     * Remove attractive but semantically incompatible alternatives before a
+     * small model sees the catalog. The complete catalog is still retained by
+     * SegmentAssistant for final validation.
+     *
+     * @param mixed[] $catalog
+     *
+     * @return mixed[]
+     */
+    private function contextualCatalog(string $request, array $catalog): array
+    {
+        $text = $this->normalise($request);
+        $pageActivity = 1 === preg_match(
+            '/(?:open|view|visit|browse|access)\w*\s+(?:the\s+)?(?:site|website|page|url)|(?:откр|просмотр|посет)\w*\s+(?:сайт|страниц|url)|(?:otvor|pregled|poset)\w*\s+(?:sajt|stranic|url)/u',
+            $text
+        );
+        $hasTimeWindow = 1 === preg_match(
+            '/(?:last|past|previous)\s+\d+\s+days?|(?:today|yesterday)|(?:последн|прошл)\w*\s+\d+\s+(?:дн|день)|(?:сегодня|вчера)|(?:poslednj|prethodn)\w*\s+\d+\s+dan|(?:danas|juče|juce)/u',
+            $text
+        );
+        $contactFirstName = 1 === preg_match('/\bfirst\s+name\b|\bим(?:я|ени)\b|\bime\b/u', $text);
+        $companyRequested = 1 === preg_match('/\bcompan(?:y|ies)\b|компан|kompan/u', $text);
+
+        return array_values(array_filter($catalog, function (mixed $entry) use ($pageActivity, $hasTimeWindow, $contactFirstName, $companyRequested): bool {
+            if (!is_array($entry)) {
+                return false;
+            }
+
+            $object = $this->normalise((string) ($entry['object'] ?? ''));
+            $field  = $this->normalise((string) ($entry['field'] ?? ''));
+
+            if ($pageActivity && !$hasTimeWindow && 1 === preg_match('/(?:^|_)(?:in_last_\d+_days|from_yesterday)$/', $field)) {
+                return false;
+            }
+
+            if ($pageActivity && 'company' === $object && 'companywebsite' === $field) {
+                return false;
+            }
+
+            if ($contactFirstName && !$companyRequested && 'company' === $object && 'companyname' === $field) {
+                return false;
+            }
+
+            return true;
+        }));
+    }
+
     /** @return string[] */
     private function terms(string $request): array
     {
@@ -110,6 +164,7 @@ final class SegmentPromptBuilder
         $concepts = [
             '/company|компан|kompan/u' => ['company', 'name'],
             '/page|url|страниц|stranic|посет|poset/u' => ['page', 'url', 'visit'],
+            '/(?:open|view|visit|browse|access)\w*\s+(?:the\s+)?(?:site|website|page|url)|(?:откр|просмотр|посет)\w*\s+(?:сайт|страниц|url)|(?:otvor|pregled|poset)\w*\s+(?:sajt|stranic|url)/u' => ['page', 'url', 'visit'],
             '/email|mail|письм|мејл|mejl|poruk/u' => ['email', 'sent', 'read'],
             '/campaign|кампан|kampan/u' => ['campaign'],
             '/android|андроид|device|устройств|uređaj|uredjaj/u' => ['android', 'device', 'os'],
