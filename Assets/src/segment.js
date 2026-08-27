@@ -339,4 +339,13 @@
   } else {
     init();
   }
+
+  // Mautic replaces admin content without reloading the document. Its supported
+  // completion hook is the jQuery ajaxComplete event on the document.
+  if (typeof window.mQuery === 'function') {
+    var mauticDocument = window.mQuery(document);
+    if (mauticDocument && typeof mauticDocument.ajaxComplete === 'function') {
+      mauticDocument.ajaxComplete(init);
+    }
+  }
 })();

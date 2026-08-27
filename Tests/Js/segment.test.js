@@ -22,7 +22,10 @@ function loadPage(pathname = '/s/segments/new') {
   window.MauticAiEmailSectionsConfig = { segmentEndpoint: '/s/ai-email-sections/segment-plan' };
   window.mauticAjaxCsrf = 'token';
   window.Mautic = { translate: (key) => key };
-  window.mQuery = jest.fn();
+  window.__aiSegmentAjaxComplete = null;
+  window.mQuery = jest.fn(() => ({
+    ajaxComplete: (callback) => { window.__aiSegmentAjaxComplete = callback; },
+  }));
   window.eval(fs.readFileSync(SOURCE, 'utf8'));
 }
 
@@ -37,6 +40,17 @@ describe('new segment assistant', () => {
 
     loadPage('/s/segments/edit/12');
     expect(document.getElementById('ai-segment-assistant')).toBeNull();
+  });
+
+  test('is rendered after Mautic replaces the page during internal navigation', () => {
+    loadPage('/s/segments');
+    expect(document.getElementById('ai-segment-assistant')).toBeNull();
+
+    window.history.replaceState({}, '', '/s/segments/new');
+    document.body.innerHTML = '<div id="filters"><div class="alert-info"></div><select id="available_segment_filters"><option value=""></option></select><div id="leadlist_filters"></div></div>';
+    window.__aiSegmentAjaxComplete();
+
+    expect(document.getElementById('ai-segment-assistant')).not.toBeNull();
   });
 
   test('sends the exact live field aliases and operators to the endpoint', async () => {

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.2 - 2026-08-27
+
+- Keep the new-segment assistant available after Mautic replaces admin content
+  during internal navigation instead of requiring a full page reload.
+- Load the segment runtime across the administration UI while retaining its
+  strict new-segment-only rendering guard.
+- Refresh plugin asset versions so browsers no longer reuse the 2.0.0 scripts
+  after a plugin update.
+
 ## 2.0.1 - 2026-08-27
 
 - Rank the live segment-field catalog against the operator request before it is

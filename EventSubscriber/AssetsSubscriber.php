@@ -61,11 +61,11 @@ class AssetsSubscriber implements EventSubscriberInterface
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
 
         $assetsEvent->addScriptDeclaration('window.MauticAiEmailSectionsConfig = '.$settings.';', 'head');
-        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/index.js?v=2.0.0');
-        if ($this->isNewSegmentPage()) {
-            $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/segment.js?v=2.0.0-3');
-        }
-        $assetsEvent->addStylesheet('plugins/AiEmailSectionsBundle/Assets/dist/index.css?v=2.0.0');
+        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/index.js?v=2.0.2');
+        // Mautic changes admin pages through AJAX, so the segment runtime must
+        // already be present before the user navigates to the creation form.
+        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/segment.js?v=2.0.2-2');
+        $assetsEvent->addStylesheet('plugins/AiEmailSectionsBundle/Assets/dist/index.css?v=2.0.2');
     }
 
     /**
@@ -100,10 +100,4 @@ class AssetsSubscriber implements EventSubscriberInterface
         return 1 === preg_match('~^/s/~', $request->getPathInfo());
     }
 
-    private function isNewSegmentPage(): bool
-    {
-        $request = $this->requestStack->getCurrentRequest();
-
-        return null !== $request && 1 === preg_match('~^/s/segments/new/?$~', $request->getPathInfo());
-    }
 }
