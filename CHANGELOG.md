@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.1 - 2026-08-27
+
+- Rank the live segment-field catalog against the operator request before it is
+  sent to the model, reducing local-model latency and unrelated field guesses.
+- Keep final validation against the complete live Mautic catalog, so catalog
+  reduction cannot permit unsupported fields or operators.
+
 ## 2.0.0 - 2026-08-27
 
 - Add an AI assistant to the new-segment form that converts natural-language
