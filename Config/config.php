@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'name'        => 'Sales Snap AI Assistant',
     'description' => 'Generates email sections and prepares new segment filters from natural-language instructions.',
-    'version'     => '2.0.3',
+    'version'     => '2.0.4',
     'author'      => 'Alexander Zlobin / Sales Snap',
 
     'routes' => [

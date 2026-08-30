@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.4 - 2026-08-30
+
+- Added standalone Composer PSR-4 and test autoloading for the plugin source
+  and tests.
+- Declared PHPUnit as a development dependency and added a unit-only test
+  configuration that does not claim to replace the Mautic/MySQL functional
+  suite.
+- Synchronized the npm package and lock-file versions with the plugin release.
+- Ignored generated Composer and PHPUnit development artifacts.
+
 ## 2.0.3 - 2026-08-27
 
 - Interpret requests about opening, visiting, viewing, browsing, or accessing a

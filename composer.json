@@ -32,5 +32,22 @@
     "prefer-stable": true,
     "require": {
         "mautic/core-lib": "^6.0 || ^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5 || ^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MauticPlugin\\AiEmailSectionsBundle\\": ""
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MauticPlugin\\AiEmailSectionsBundle\\Tests\\": "Tests/"
+        }
+    },
+    "scripts": {
+        "test": "@test:unit",
+        "test:unit": "phpunit --configuration phpunit.xml.dist"
     }
 }
