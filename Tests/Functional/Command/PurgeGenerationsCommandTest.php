@@ -6,8 +6,11 @@ namespace MauticPlugin\AiEmailSectionsBundle\Tests\Functional\Command;
 
 use Doctrine\ORM\Tools\SchemaTool;
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
+use Mautic\PluginBundle\Entity\Integration;
 use MauticPlugin\AiEmailSectionsBundle\Entity\Generation;
+use MauticPlugin\AiEmailSectionsBundle\Integration\AiEmailSectionsIntegration;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
@@ -39,6 +42,8 @@ final class PurgeGenerationsCommandTest extends MauticMysqlTestCase
 
         $this->em->getConnection()->executeStatement('DROP TABLE IF EXISTS '.$table);
         (new SchemaTool($this->em))->createSchema([$metadata]);
+
+        $this->setIntegrationPublished(true);
     }
 
     public function testDeletesRowsOlderThanTheRetentionWindow(): void
@@ -84,6 +89,17 @@ final class PurgeGenerationsCommandTest extends MauticMysqlTestCase
         $tester = $this->execute(['--days' => '0']);
 
         $this->assertNotSame(0, $tester->getStatusCode(), 'Zero days would delete everything.');
+        $this->assertSame(1, $this->countRows());
+    }
+
+    public function testDisabledIntegrationDoesNotPurgeAnything(): void
+    {
+        $this->persistGeneration(500);
+        $this->setIntegrationPublished(false);
+
+        $tester = $this->execute([]);
+
+        $this->assertSame(Command::SUCCESS, $tester->getStatusCode());
         $this->assertSame(1, $this->countRows());
     }
 
@@ -139,5 +155,19 @@ final class PurgeGenerationsCommandTest extends MauticMysqlTestCase
         return (int) $this->em->createQuery(
             'SELECT COUNT(g.id) FROM '.Generation::class.' g'
         )->getSingleScalarResult();
+    }
+
+    private function setIntegrationPublished(bool $published): void
+    {
+        $repository = $this->em->getRepository(Integration::class);
+        $integration = $repository->findOneBy(['name' => AiEmailSectionsIntegration::NAME]);
+        if (!$integration instanceof Integration) {
+            $integration = new Integration();
+            $integration->setName(AiEmailSectionsIntegration::NAME);
+        }
+        $integration->setIsPublished($published);
+        $this->em->persist($integration);
+        $this->em->flush();
+        $this->em->clear();
     }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.5 - 2026-08-31
+
+- Preserve the saved off state of the personalization-token switch in the
+  integration form instead of rendering it as enabled again.
+- Skip the scheduled retention purge while the integration is unpublished.
+
 ## 2.0.4 - 2026-08-30
 
 - Added standalone Composer PSR-4 and test autoloading for the plugin source

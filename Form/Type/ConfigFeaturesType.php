@@ -76,7 +76,9 @@ class ConfigFeaturesType extends AbstractType
             'label'      => 'mautic.aiemailsections.config.tokens_enabled',
             'label_attr' => ['class' => 'control-label'],
             'attr'       => ['tooltip' => 'mautic.aiemailsections.config.tokens_enabled.tooltip'],
-            'data'       => true,
+            'data'       => array_key_exists('tokens_enabled', $options['data'] ?? [])
+                ? (bool) $options['data']['tokens_enabled']
+                : true,
         ]);
 
         $builder->add('tokens_excluded', TextareaType::class, [

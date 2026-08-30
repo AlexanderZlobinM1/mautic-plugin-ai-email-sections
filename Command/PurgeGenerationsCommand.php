@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\AiEmailSectionsBundle\Command;
 
 use MauticPlugin\AiEmailSectionsBundle\Entity\GenerationRepository;
+use MauticPlugin\AiEmailSectionsBundle\Integration\Config;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -27,8 +28,10 @@ class PurgeGenerationsCommand extends Command
 {
     public const DEFAULT_RETENTION_DAYS = 180;
 
-    public function __construct(private readonly GenerationRepository $repository)
-    {
+    public function __construct(
+        private readonly GenerationRepository $repository,
+        private readonly Config $config,
+    ) {
         parent::__construct();
     }
 
@@ -49,6 +52,10 @@ class PurgeGenerationsCommand extends Command
     {
         $io   = new SymfonyStyle($input, $output);
         $days = (int) $input->getOption('days');
+
+        if (!$this->config->isPublished()) {
+            return Command::SUCCESS;
+        }
 
         // A window of zero would delete the whole table, which is not a
         // retention policy and is more likely a typo or an unset variable.

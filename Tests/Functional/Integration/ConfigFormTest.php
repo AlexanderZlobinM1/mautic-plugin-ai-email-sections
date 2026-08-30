@@ -82,6 +82,20 @@ final class ConfigFormTest extends MauticMysqlTestCase
         $this->assertSame(Config::PROVIDER_ANTHROPIC, $form->get('provider')->getData());
     }
 
+    public function testTheTokensSwitchShowsItsSavedOffState(): void
+    {
+        $form = $this->formFactory()->create(ConfigFeaturesType::class, ['tokens_enabled' => false]);
+
+        $this->assertFalse($form->get('tokens_enabled')->getData());
+    }
+
+    public function testTheTokensSwitchDefaultsOnOnlyWhenItHasNeverBeenSaved(): void
+    {
+        $form = $this->formFactory()->create(ConfigFeaturesType::class);
+
+        $this->assertTrue($form->get('tokens_enabled')->getData());
+    }
+
     /**
      * The brief goes into the system prompt on every generation. Without a cap
      * an administrator can quietly make each call much more expensive.
