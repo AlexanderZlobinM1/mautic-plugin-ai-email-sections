@@ -71,6 +71,16 @@ services:
 
 Settings → Plugins → **AI Email Sections**. While the integration is unpublished nothing is injected into the builder at all.
 
+### Shared test environment
+
+Local integration checks use the shared **Mautic Mini** environment, not a
+copy of this plugin source. Its canonical runtime path is
+`ssh://65.108.101.82/var/www/nikola6/public_html` on MauticFarm-02. See the
+workspace records in `../../projects.toml` and `../../workspace-state.toml` for
+its current status, backend dependencies and limits. Verify the live runtime
+before testing; the environment is isolated test infrastructure and is not the
+MCC catalog authority.
+
 1. Open the plugin and **publish** it.
 2. **Enabled/Auth** tab: paste the API key. It is stored encrypted here, and this is the only place it may go. The Features tab writes to `featureSettings`, which is plain text in the database.
 3. **Features** tab: pick the **Provider**. Leaving *API base URL* and *Model name* empty uses that provider's defaults, which is the normal case.

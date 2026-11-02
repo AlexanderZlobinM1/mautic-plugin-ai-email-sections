@@ -52,12 +52,14 @@ final class SegmentPlanValidator
                 $operator = $this->operator($condition['operator'] ?? null);
                 $key      = $object."\0".$field;
 
-                if (isset($allowed[$key])) {
-                    $operator = $this->normalizeOperator($operator, $allowed[$key]);
+                if (!isset($allowed[$key])) {
+                    throw new SegmentPlanException(sprintf('The generated field %s.%s is not offered by this Mautic.', $object, $field));
                 }
 
-                if (!isset($allowed[$key]) || !in_array($operator, $allowed[$key], true)) {
-                    throw new SegmentPlanException(sprintf('The generated condition %s.%s is not offered by this Mautic.', $object, $field));
+                $operator = $this->normalizeOperator($operator, $allowed[$key]);
+
+                if (!in_array($operator, $allowed[$key]['values'], true)) {
+                    throw new SegmentPlanException(sprintf('The generated operator %s is not offered for %s.%s.', $operator, $object, $field));
                 }
 
                 $normalizedCondition = [
@@ -87,7 +89,7 @@ final class SegmentPlanValidator
     /**
      * @param mixed[] $catalog
      *
-     * @return array<string, string[]>
+     * @return array<string, array{values: string[], labels: array<string, string>}>
      */
     private function allowedFields(array $catalog): array
     {
@@ -106,14 +108,24 @@ final class SegmentPlanValidator
             }
 
             $operators = [];
+            $labels    = [];
             foreach (is_array($field['operators'] ?? null) ? $field['operators'] : [] as $operator) {
-                if (is_array($operator) && isset($operator['value']) && is_scalar($operator['value'])) {
-                    $operators[] = (string) $operator['value'];
+                if (!is_array($operator) || !isset($operator['value']) || !is_scalar($operator['value'])) {
+                    continue;
+                }
+
+                $value = (string) $operator['value'];
+                $operators[] = $value;
+                if (isset($operator['label']) && is_scalar($operator['label'])) {
+                    $labels[$this->operatorToken((string) $operator['label'])] = $value;
                 }
             }
 
             if ([] !== $operators) {
-                $allowed[$object."\0".$alias] = array_values(array_unique($operators));
+                $allowed[$object."\0".$alias] = [
+                    'values' => array_values(array_unique($operators)),
+                    'labels' => $labels,
+                ];
             }
         }
 
@@ -138,7 +150,7 @@ final class SegmentPlanValidator
         return $value;
     }
 
-    /** @param string[] $allowed */
+    /** @param array{values: string[], labels: array<string, string>} $allowed */
     private function normalizeOperator(string $operator, array $allowed): string
     {
         $aliases = [
@@ -149,7 +161,20 @@ final class SegmentPlanValidator
         ];
         $normalized = $aliases[$operator] ?? $operator;
 
-        return in_array($normalized, $allowed, true) ? $normalized : $operator;
+        if (in_array($normalized, $allowed['values'], true)) {
+            return $normalized;
+        }
+
+        $token = $this->operatorToken($operator);
+
+        return $allowed['labels'][$token] ?? $normalized;
+    }
+
+    private function operatorToken(string $operator): string
+    {
+        $token = preg_replace('/[^a-z0-9]+/iu', '', mb_strtolower(trim($operator)));
+
+        return is_string($token) ? $token : mb_strtolower(trim($operator));
     }
 
     private function value(mixed $value): mixed

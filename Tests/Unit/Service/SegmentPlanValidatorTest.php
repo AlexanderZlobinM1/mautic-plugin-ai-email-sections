@@ -49,6 +49,7 @@ final class SegmentPlanValidatorTest extends TestCase
     public function testRejectsInventedField(): void
     {
         $this->expectException(SegmentPlanException::class);
+        $this->expectExceptionMessage('The generated field lead.invented is not offered by this Mautic.');
 
         (new SegmentPlanValidator())->validate([
             'groups' => [[
@@ -62,6 +63,7 @@ final class SegmentPlanValidatorTest extends TestCase
     public function testRejectsOperatorNotOfferedForField(): void
     {
         $this->expectException(SegmentPlanException::class);
+        $this->expectExceptionMessage('The generated operator regexp is not offered for lead.device_os.');
 
         (new SegmentPlanValidator())->validate([
             'groups' => [[
@@ -85,5 +87,38 @@ final class SegmentPlanValidatorTest extends TestCase
         ], $catalog);
 
         $this->assertSame('gte', $result['groups'][0]['conditions'][0]['operator']);
+    }
+
+    public function testNormalizesDisplayOperatorLabelsForCompanyAndPageHitConditions(): void
+    {
+        $catalog = [
+            [
+                'object' => 'company',
+                'field' => 'companyname',
+                'operators' => [['label' => 'starts with', 'value' => 'startsWith']],
+            ],
+            [
+                'object' => 'behaviors',
+                'field' => 'hit_url',
+                'operators' => [['label' => 'contains', 'value' => 'contains']],
+            ],
+        ];
+
+        $result = (new SegmentPlanValidator())->validate([
+            'groups' => [
+                ['conditions' => [
+                    ['object' => 'company', 'field' => 'companyname', 'operator' => 'starts with', 'value' => 'O'],
+                    ['object' => 'behaviors', 'field' => 'hit_url', 'operator' => 'contains', 'value' => 'apple.com'],
+                ]],
+                ['conditions' => [
+                    ['object' => 'company', 'field' => 'companyname', 'operator' => 'starts_with', 'value' => 'B'],
+                    ['object' => 'behaviors', 'field' => 'hit_url', 'operator' => 'contains', 'value' => 'apple.com'],
+                ]],
+            ],
+        ], $catalog);
+
+        $this->assertSame('startsWith', $result['groups'][0]['conditions'][0]['operator']);
+        $this->assertSame('startsWith', $result['groups'][1]['conditions'][0]['operator']);
+        $this->assertSame('contains', $result['groups'][0]['conditions'][1]['operator']);
     }
 }
