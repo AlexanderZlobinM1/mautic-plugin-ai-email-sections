@@ -81,29 +81,27 @@ its current status, backend dependencies and limits. Verify the live runtime
 before testing; the environment is isolated test infrastructure and is not the
 MCC catalog authority.
 
-1. Open the plugin and **publish** it.
-2. **Enabled/Auth** tab: add the API key for each profile. Keys are stored encrypted here; they never go into `featureSettings` or the browser. The shared fallback key remains available for profiles that do not override it.
-3. **Features** tab: create as many profiles as needed. Each profile can have its own provider, endpoint, model, brand brief, token policy, limits and theme. Profiles with identical settings are valid too.
+1. Open the plugin and switch **Active** on. While it is off, the Features tab is locked and the email/segment assistants behave as if the plugin were not installed.
+2. **Features** tab: create as many profiles as needed. Each profile can have its own provider, encrypted API key, endpoint, model, brand brief, token policy, limits and theme. Profiles with identical settings are valid too.
+3. Use **Save profile** to persist the profile through Mautic's normal integration save action.
 4. Choose the **Default profile**, then save. The email and segment assistants still let the operator choose a profile for every generation.
-5. Save, then confirm the block appears in the builder. If it does not, follow *Verifying it works* below rather than guessing.
-
-The two tabs are built differently by the IntegrationsBundle and store to different places, which is why the key cannot simply be moved next to the rest of the connection settings.
+5. Confirm the block appears in the builder. If it does not, follow *Verifying it works* below rather than guessing.
 
 | Tab | Field | Default |
 |---|---|---|
-| Authentication (encrypted) | Shared fallback API key and one optional key per profile | empty |
+| Enabled/Auth | Active switch and Sales Snap ownership notice | off/on state |
 | Features | Default profile | first profile |
 | Features | Profiles | unlimited |
-| Each profile | Provider, endpoint and model | follows the provider |
+| Each profile | Provider, encrypted API key, endpoint and model | follows the provider |
 | Each profile | Brand, token policy, temperature, output limit, image, rate limit, timeout and theme | provider/theme defaults |
 
-The API keys are stored on the encrypted auth tab and never reach the browser. The profile id sent with a generation is only an allowlisted identifier; the server resolves all connection details.
+Profile API keys are submitted through Mautic's encrypted integration-key payload even though the controls are displayed beside their matching profile. Keys are not added to `featureSettings` or the runtime browser configuration. The profile id sent with a generation is only an allowlisted identifier; the server resolves all connection details.
 
 ### Profiles and quick starts
 
 The profile selector is shown in both assistants. The selected profile controls the complete runtime configuration for that request, including the local Mac mini Qwen endpoint, a cloud model, or any other OpenAI-compatible, Gemini or Anthropic connection. A missing or deleted profile id falls back to the configured default.
 
-The new-segment assistant also includes quick-start prompts for recent website visitors, company-name prefixes, Android contacts and inactive contacts. They only fill the prompt; the live Mautic 6/7 field catalog and the server-side validator still decide which filters may be applied.
+The new-segment assistant also includes a selector with twelve ready-made prompts covering website visits, email activity, form submissions, new contacts, company data, mobile platforms and inactivity. A selected template only fills the prompt; the live Mautic 6/7 field catalog and the server-side validator still decide which filters may be applied.
 
 **Brand and tone of voice** is optional free text describing what you sell, who you are writing to, how formal to be, and anything to avoid. It is appended to the end of the system prompt, capped at 2000 characters because it travels on every generation. Leave it empty and the assistant still works, it just writes more generic copy. In a 12-case comparison, filling it in removed every exclamation mark from the output and roughly doubled how often the copy mentioned what the company actually makes.
 

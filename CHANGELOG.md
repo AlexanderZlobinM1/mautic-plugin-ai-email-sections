@@ -1,11 +1,18 @@
 # Changelog
 
-## 3.0.2 - test-only candidate - 2026-11-02
+## 3.0.2 - 2026-11-02
 
-- Rebuild the Mautic integration modal layout around its native Bootstrap form
-  wrappers so profile labels and controls keep usable widths.
-- Add bounded modal scrolling, responsive tabs and profile field reflow without
-  horizontal overflow.
+- Rebuild the integration modal on Mautic's standard width and native form grid,
+  with full-width long values and grouped compact controls.
+- Keep the Enabled/Auth tab limited to the functional Active switch and Sales
+  Snap ownership notice; move each encrypted API key beside its AI profile.
+- Make the disabled state real: lock the Features tab and suppress the email and
+  segment assistants until the integration is enabled again.
+- Replace stacked profile forms with one profile selector/editor, explicit New,
+  Save and Remove actions, and persistence through Mautic's native save action.
+- Replace the four segment quick-start buttons with a translated selector and
+  twelve ready-made prompts.
+- Add and update English, Russian, Portuguese and Serbian operator strings.
 
 ## 3.0.1 - 2026-11-02
 

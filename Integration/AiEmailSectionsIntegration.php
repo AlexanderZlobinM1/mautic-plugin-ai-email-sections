@@ -30,4 +30,17 @@ class AiEmailSectionsIntegration extends BasicIntegration implements BasicInterf
     {
         return 'plugins/AiEmailSectionsBundle/Assets/img/icon.png';
     }
+
+    public function getFormNotes($section)
+    {
+        if ('custom' === $section) {
+            return [
+                'custom'     => true,
+                'template'   => '@AiEmailSections/Integration/footer.html.twig',
+                'parameters' => [],
+            ];
+        }
+
+        return parent::getFormNotes($section);
+    }
 }

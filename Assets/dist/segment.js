@@ -18,6 +18,10 @@
     return runtimeConfig;
   }
 
+  function disabled() {
+    return window.MauticAiEmailSectionsDisabled === true || !config().segmentEndpoint;
+  }
+
   function catalogFromForm() {
     return Array.prototype.map.call(
       document.querySelectorAll('#available_segment_filters option[value]'),
@@ -47,6 +51,9 @@
   }
 
   function requestPlan(prompt, catalog, profile) {
+    if (disabled()) {
+      return Promise.reject(new Error(t('mautic.aiemailsections.error.disabled', 'The assistant is disabled.')));
+    }
     return fetch(config().segmentEndpoint, {
       method: 'POST',
       credentials: 'same-origin',
@@ -279,6 +286,13 @@
   }
 
   function init() {
+    if (disabled()) {
+      var existing = document.getElementById('ai-segment-assistant');
+      if (existing) {
+        existing.remove();
+      }
+      return;
+    }
     if (!/^\/s\/segments\/new\/?$/.test(window.location.pathname) || document.getElementById('ai-segment-assistant')) {
       return;
     }
@@ -295,7 +309,10 @@
     panel.innerHTML =
       '<div class="ai-segment-assistant__title">' + t('mautic.aiemailsections.segment.title', 'AI segment assistant') + '</div>' +
       '<textarea class="form-control ai-segment-assistant__prompt" rows="3"></textarea>' +
-      '<div class="ai-segment-assistant__quick-starts"></div>' +
+      '<label class="ai-segment-assistant__quick-start-label">' + t('mautic.aiemailsections.segment.quick_start.label', 'Ready-made prompt') + '</label>' +
+      '<div class="ai-segment-assistant__quick-starts"><select class="form-control ai-segment-assistant__quick-start-select"></select>' +
+      '<button type="button" class="btn btn-secondary ai-segment-assistant__quick-start-apply">' +
+      t('mautic.aiemailsections.segment.quick_start.apply', 'Use prompt') + '</button></div>' +
       '<label class="ai-segment-assistant__profile-label">' + t('mautic.aiemailsections.profile.label', 'AI profile') + '</label>' +
       '<select class="form-control ai-segment-assistant__profile"></select>' +
       '<div class="ai-segment-assistant__actions"><button type="button" class="btn btn-primary ai-segment-assistant__run">' +
@@ -305,7 +322,8 @@
 
     var prompt = panel.querySelector('.ai-segment-assistant__prompt');
     var profileSelect = panel.querySelector('.ai-segment-assistant__profile');
-    var quickStarts = panel.querySelector('.ai-segment-assistant__quick-starts');
+    var quickStartSelect = panel.querySelector('.ai-segment-assistant__quick-start-select');
+    var quickStartApply = panel.querySelector('.ai-segment-assistant__quick-start-apply');
     var button = panel.querySelector('.ai-segment-assistant__run');
     var status = panel.querySelector('.ai-segment-assistant__status');
     prompt.placeholder = t('mautic.aiemailsections.segment.placeholder', 'Describe who should be included in the segment.');
@@ -319,17 +337,30 @@
     });
     profileSelect.value = config().profile || Object.keys(profiles)[0] || '';
 
+    var quickStartPlaceholder = document.createElement('option');
+    quickStartPlaceholder.value = '';
+    quickStartPlaceholder.textContent = t('mautic.aiemailsections.segment.quick_start.select', 'Choose a ready-made prompt');
+    quickStartSelect.appendChild(quickStartPlaceholder);
+
     (config().quickStarts || []).forEach(function (quickStart) {
-      var button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'btn btn-secondary ai-segment-assistant__quick-start';
-      button.textContent = t(quickStart.label, quickStart.prompt);
-      button.title = quickStart.prompt;
-      button.addEventListener('click', function () {
-        prompt.value = quickStart.prompt;
-        prompt.focus();
-      });
-      quickStarts.appendChild(button);
+      var option = document.createElement('option');
+      option.value = quickStart.id;
+      option.textContent = t(quickStart.label, quickStart.prompt);
+      option.setAttribute('data-prompt', t(quickStart.promptKey || '', quickStart.prompt));
+      quickStartSelect.appendChild(option);
+    });
+
+    quickStartApply.disabled = true;
+    quickStartSelect.addEventListener('change', function () {
+      quickStartApply.disabled = !quickStartSelect.value;
+    });
+    quickStartApply.addEventListener('click', function () {
+      var option = quickStartSelect.options[quickStartSelect.selectedIndex];
+      if (!option || !option.value) {
+        return;
+      }
+      prompt.value = option.getAttribute('data-prompt') || option.textContent;
+      prompt.focus();
     });
 
     if (!Object.keys(profiles).length) {

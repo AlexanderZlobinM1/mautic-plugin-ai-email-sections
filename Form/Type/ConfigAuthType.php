@@ -18,18 +18,6 @@ class ConfigAuthType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add('api_key', PasswordType::class, [
-            'label'      => 'mautic.aiemailsections.config.api_key.fallback',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => [
-                'class'        => 'form-control',
-                'tooltip'      => 'mautic.aiemailsections.config.api_key.tooltip',
-                'autocomplete' => 'off',
-            ],
-            'required'         => false,
-            'always_empty'     => false,
-        ]);
-
         $integrationObject = $options['integration'];
         $integration = is_object($integrationObject) && method_exists($integrationObject, 'getIntegrationConfiguration')
             ? $integrationObject->getIntegrationConfiguration()
@@ -45,6 +33,7 @@ class ConfigAuthType extends AbstractType
             ? (array) $integration->getApiKeys()
             : [];
         $profileKeys = is_array($apiKeys['profiles'] ?? null) ? $apiKeys['profiles'] : [];
+        $legacyKey   = (string) ($apiKeys['api_key'] ?? '');
         $profileData = [];
 
         foreach ($rawProfiles as $key => $profile) {
@@ -55,19 +44,37 @@ class ConfigAuthType extends AbstractType
             if ('' === $id) {
                 continue;
             }
-            $profileData[$id] = ['api_key' => (string) ($profileKeys[$id] ?? '')];
+            $storedKey = $profileKeys[$id] ?? $legacyKey;
+            // 3.0.0 briefly rendered each key as a nested form. Read that
+            // shape as well so an existing encrypted value is not lost when
+            // the auth form is normalised to profiles[id] => string.
+            if (is_array($storedKey)) {
+                $storedKey = $storedKey['api_key'] ?? '';
+            }
+            $profileData[$id] = (string) $storedKey;
         }
 
-        if ([] !== $profileData) {
-            $builder->add('profiles', CollectionType::class, [
-                'label'         => 'mautic.aiemailsections.config.api_keys.profiles',
-                'entry_type'    => ProfileApiKeyType::class,
-                'entry_options' => ['label' => false],
-                'allow_add'     => false,
-                'allow_delete'  => false,
-                'data'          => $profileData,
-            ]);
-        }
+        // The controls are rendered by the encrypted auth form, then moved by
+        // config.js into their matching profile editor on the Features tab.
+        // Keeping their names under apiKeys means Mautic still encrypts them.
+        $builder->add('profiles', CollectionType::class, [
+            'label'         => false,
+            'entry_type'    => PasswordType::class,
+            'entry_options' => [
+                'label'        => false,
+                'required'     => false,
+                'always_empty' => false,
+                'attr'         => [
+                    'class'        => 'form-control',
+                    'autocomplete' => 'off',
+                ],
+            ],
+            'allow_add'      => true,
+            'allow_delete'   => true,
+            'by_reference'   => false,
+            'data'           => $profileData,
+            'required'       => false,
+        ]);
     }
 
     /**

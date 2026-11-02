@@ -60,91 +60,169 @@
  * panel edge instead. */
 .gjs-pn-options { right: 300px; }
 
-/* Integration settings: the native Mautic integration form wraps every
- * field in Bootstrap columns. Keep those wrappers, but make the modal and
- * profile repeater own their sizing instead of inheriting narrow columns. */
-#IntegrationEditModal .modal-dialog {
-  width: calc(100vw - 32px);
-  max-width: 1200px;
-  margin: 16px auto;
-}
-#IntegrationEditModal .modal-content {
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100vh - 32px);
-}
-#IntegrationEditModal .modal-body {
-  min-height: 0;
-  overflow: hidden;
-}
-#IntegrationEditModal .modal-body-content {
+/* Integration settings: keep Mautic's native modal and outer Bootstrap grid.
+ * Only the profile repeater is styled, and only after config.js marks this
+ * modal as belonging to AI Email Sections. */
+#IntegrationEditModal.ai-email-sections-modal .modal-body-content,
+#IntegrationEditModal.ai-email-sections-modal .tab-content,
+#IntegrationEditModal.ai-email-sections-modal .tab-pane,
+#IntegrationEditModal.ai-email-sections-modal #features-container,
+#IntegrationEditModal.ai-email-sections-modal #features-container > .row,
+#IntegrationEditModal.ai-email-sections-modal #features-container > .row > [class*="col-"] {
   min-width: 0;
-  max-height: calc(100vh - 150px);
+}
+#IntegrationEditModal.ai-email-sections-modal .modal-body-content {
   overflow-x: hidden;
   overflow-y: auto;
 }
-#IntegrationEditModal .tab-content,
-#IntegrationEditModal .tab-pane,
-#IntegrationEditModal #features-container {
-  min-width: 0;
+#IntegrationEditModal.ai-email-sections-modal #features-tab.ai-tab-disabled > a {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: .45;
 }
-#IntegrationEditModal .nav-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+#IntegrationEditModal.ai-email-sections-modal #details-container > .row.form-group,
+#IntegrationEditModal.ai-email-sections-modal #integration_config_apiKeys .row.form-group {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 0 24px !important;
 }
-#IntegrationEditModal .nav-tabs > li {
-  float: none;
-  flex: 0 0 auto;
-}
-#IntegrationEditModal #features-container > .row,
-#IntegrationEditModal #features-container > .row > [class*="col-"] {
-  min-width: 0;
-}
-
-/* The collection row itself uses Mautic's two-column config layout. */
-#IntegrationEditModal .ai-profile-form-group {
-  display: grid !important;
-  grid-template-columns: minmax(12rem, 32%) minmax(0, 1fr);
-  column-gap: 24px;
-  width: 100%;
-  margin: 0 0 16px;
-}
-#IntegrationEditModal .ai-profile-form-group > [class*="col-"] {
+#IntegrationEditModal.ai-email-sections-modal #details-container > .row.form-group > [class*="col-"],
+#IntegrationEditModal.ai-email-sections-modal #integration_config_apiKeys .row.form-group > [class*="col-"] {
+  display: block !important;
   float: none !important;
-  width: auto !important;
+  width: 100% !important;
   min-width: 0;
-  padding-right: 0;
-  padding-left: 0;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
 }
-#IntegrationEditModal .ai-profile-form-group > [class*="col-"]:first-child {
-  grid-column: 1;
-}
-#IntegrationEditModal .ai-profile-form-group > [class*="col-"]:last-child {
-  grid-column: 2;
-}
-#IntegrationEditModal .ai-profile-form-group > .col-xs-12 {
-  grid-column: 1 / -1;
-}
-#IntegrationEditModal .ai-profile-form-group .control-label,
-#IntegrationEditModal .ai-profile-form-group > [class*="col-"] > label {
-  display: block;
-  max-width: 100%;
+#IntegrationEditModal.ai-email-sections-modal #details-container > .row.form-group > .col-md-4,
+#IntegrationEditModal.ai-email-sections-modal #integration_config_apiKeys .row.form-group > .col-md-4 {
   margin-bottom: 8px;
 }
+#IntegrationEditModal.ai-email-sections-modal #details-container > hr + .row.form-group > .col-md-4 {
+  display: none !important;
+}
+#IntegrationEditModal.ai-email-sections-modal #details-container > hr,
+#IntegrationEditModal.ai-email-sections-modal #details-container > .row.form-group.ai-profile-key-source {
+  display: none !important;
+}
+#IntegrationEditModal.ai-email-sections-modal #details-container .toggle {
+  display: inline-block;
+}
+#IntegrationEditModal.ai-email-sections-modal .ai-email-sections-copyright {
+  margin-top: 70px;
+  color: #4a4a4a;
+  font-weight: 500;
+}
+#IntegrationEditModal.ai-email-sections-modal .ai-email-sections-copyright a {
+  color: inherit;
+  text-decoration: none;
+}
+#IntegrationEditModal.ai-email-sections-modal #integration_config_apiKeys input,
+#IntegrationEditModal.ai-email-sections-modal #integration_config_apiKeys .form-control {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+#IntegrationEditModal.ai-email-sections-modal #integration_config_apiKeys .help-block {
+  margin-top: 6px;
+  color: #6f6f6f;
+}
+#IntegrationEditModal.ai-email-sections-modal .ai-profile-form-group > [class*="col-"] {
+  min-width: 0;
+}
+#IntegrationEditModal.ai-email-sections-modal #features-container > .row.form-group {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+#IntegrationEditModal.ai-email-sections-modal #features-container > .row.form-group > .col-md-4 {
+  display: none !important;
+}
+#IntegrationEditModal.ai-email-sections-modal #features-container > .row.form-group > .col-md-8 {
+  display: block !important;
+  width: 100% !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+#IntegrationEditModal.ai-email-sections-modal #integration_config_featureSettings_integration > .row.form-group {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 0 24px !important;
+}
+#IntegrationEditModal.ai-email-sections-modal #integration_config_featureSettings_integration > .row.form-group > [class*="col-"] {
+  display: block !important;
+  float: none !important;
+  width: 100% !important;
+  min-width: 0;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+#IntegrationEditModal.ai-email-sections-modal #integration_config_featureSettings_integration > .row.form-group > .col-md-4 {
+  margin-bottom: 10px;
+}
+#IntegrationEditModal.ai-email-sections-modal #integration_config_featureSettings_integration > .row.form-group label,
+#IntegrationEditModal.ai-email-sections-modal #integration_config_featureSettings_integration > .row.form-group .control-label {
+  display: block;
+  margin-bottom: 6px;
+}
 
-.ai-profile-collection {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
-  gap: 16px;
+.ai-email-sections-modal .ai-profile-collection {
+  display: block;
   width: 100%;
   min-width: 0;
   margin: 0;
 }
-.ai-profile-collection > .ai-profile-row {
+.ai-email-sections-modal .ai-profile-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+.ai-email-sections-modal .ai-profile-selector-wrap {
+  min-width: 0;
+}
+.ai-email-sections-modal .ai-profile-selector-wrap label {
+  display: block;
+  margin-bottom: 6px;
+}
+.ai-email-sections-modal .ai-profile-selector,
+.ai-email-sections-modal .ai-profile-create {
+  width: 100%;
+}
+.ai-email-sections-modal .ai-profile-create {
+  white-space: nowrap;
+}
+.ai-email-sections-modal .ai-profile-collection > div {
+  width: 100%;
+  min-width: 0;
+}
+.ai-email-sections-modal .ai-profile-collection > .row.form-group {
+  display: none !important;
+  width: 100% !important;
+  margin: 0 0 16px !important;
+}
+.ai-email-sections-modal .ai-profile-collection > .row.form-group.ai-profile-item--active {
+  display: block !important;
+}
+.ai-email-sections-modal .ai-profile-collection > .row.form-group > .col-md-4 {
+  display: none !important;
+}
+.ai-email-sections-modal .ai-profile-collection > .row.form-group > .col-md-8 {
+  display: block !important;
+  width: 100% !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+.ai-email-sections-modal .ai-profile-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  gap: 16px 20px;
   min-width: 0;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   padding: 16px;
   border: 1px solid #dfe3e8;
   border-radius: 6px;
@@ -152,106 +230,118 @@
 }
 
 /* ProfileType fields are rendered either as col-md-4/col-md-8 pairs or as a
- * single col-xs-12 wrapper, depending on the exact Mautic form theme. */
-.ai-profile-row > .form-group {
-  display: grid !important;
-  grid-template-columns: minmax(12rem, 34%) minmax(0, 1fr);
-  gap: 8px 12px;
-  align-items: start;
-  width: 100% !important;
+ * single col-xs-12 wrapper, depending on the exact Mautic form theme. The
+ * field groups themselves become the grid items: long values span the card,
+ * while short values share a row. */
+.ai-email-sections-modal .ai-profile-row > .form-group {
+  display: block !important;
+  grid-column: span 2;
   min-width: 0;
-  margin: 0 0 12px !important;
+  align-self: start;
+  width: 100% !important;
+  margin: 0 !important;
   padding: 0 !important;
 }
-.ai-profile-row > .form-group > [class*="col-"] {
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--wide { grid-column: 1 / -1; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--compact { grid-column: span 1; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--half { grid-column: span 1; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--name { order: 1; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--provider { order: 2; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--api_key { order: 3; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--model { order: 4; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--theme { order: 5; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--base_url { order: 6; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--brand { order: 7; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--tokens_enabled { order: 8; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--tokens_excluded { order: 9; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--temperature { order: 10; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--max_tokens { order: 11; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--rate_limit { order: 12; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--timeout { order: 13; }
+.ai-email-sections-modal .ai-profile-row > .ai-profile-field--placeholder_image { order: 14; }
+.ai-email-sections-modal .ai-profile-row > .form-group > [class*="col-"] {
+  display: block !important;
   float: none !important;
-  width: auto !important;
+  width: 100% !important;
   min-width: 0;
   min-height: 0;
   margin: 0 !important;
   padding-right: 0 !important;
   padding-left: 0 !important;
 }
-.ai-profile-row > .form-group > [class*="col-"]:first-child {
-  grid-column: 1;
+.ai-email-sections-modal .ai-profile-row > .form-group label,
+.ai-email-sections-modal .ai-profile-row > .form-group .control-label {
+  display: block;
+  max-width: 100%;
+  margin: 0 0 6px;
+  line-height: 1.35;
 }
-.ai-profile-row > .form-group > [class*="col-"]:last-child {
-  grid-column: 2;
-}
-.ai-profile-row > .form-group > .col-xs-12 {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(12rem, 34%) minmax(0, 1fr);
-  gap: 8px 12px;
-}
-.ai-profile-row > .form-group > .col-xs-12 > label,
-.ai-profile-row > .form-group > .col-xs-12 > .control-label {
-  grid-column: 1;
-  padding-top: 7px;
-}
-.ai-profile-row > .form-group > .col-xs-12 > .form-control,
-.ai-profile-row > .form-group > .col-xs-12 > select,
-.ai-profile-row > .form-group > .col-xs-12 > textarea,
-.ai-profile-row > .form-group > .col-xs-12 > .choice-wrapper,
-.ai-profile-row > .form-group > .col-xs-12 > .controls {
-  grid-column: 2;
-  min-width: 0;
-}
-.ai-profile-row > .form-group > .col-md-8 > div,
-.ai-profile-row > .form-group > .col-sm-8 > div {
-  min-width: 0;
-}
-.ai-profile-row .form-control,
-.ai-profile-row select,
-.ai-profile-row textarea,
-.ai-profile-row input:not([type="hidden"]),
-.ai-profile-row .choice-wrapper,
-.ai-profile-row .btn-group {
+.ai-email-sections-modal .ai-profile-row > .form-group > [class*="col-"] > div { min-width: 0; }
+.ai-email-sections-modal .ai-profile-row .form-control,
+.ai-email-sections-modal .ai-profile-row select,
+.ai-email-sections-modal .ai-profile-row textarea,
+.ai-email-sections-modal .ai-profile-row input:not([type="hidden"]),
+.ai-email-sections-modal .ai-profile-row .choice-wrapper,
+.ai-email-sections-modal .ai-profile-row .btn-group {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
   min-width: 0;
 }
-.ai-profile-row textarea {
+.ai-email-sections-modal .ai-profile-row textarea {
   min-height: 72px;
   resize: vertical;
 }
-.ai-profile-row .btn-group {
+.ai-email-sections-modal .ai-profile-row .btn-group {
   display: flex;
 }
-.ai-profile-row .btn-group > .btn {
+.ai-email-sections-modal .ai-profile-row .btn-group > .btn {
   flex: 1 1 0;
   min-width: 0;
 }
-.ai-profile-row > .ai-profile-remove {
+.ai-email-sections-modal .ai-profile-row > .ai-profile-remove {
+  grid-column: 1 / -1;
+  order: 99;
+  justify-self: start;
+  width: auto;
   margin-top: 4px;
 }
+.ai-email-sections-modal .ai-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-top: 12px;
+}
+.ai-email-sections-modal .ai-profile-status {
+  flex: 1 1 100%;
+  min-height: 18px;
+  color: #525252;
+  font-size: 12px;
+}
 @media (max-width: 720px) {
-  #IntegrationEditModal .modal-dialog {
-    width: calc(100vw - 16px);
-    margin: 8px auto;
-  }
-  #IntegrationEditModal .modal-content {
-    max-height: calc(100vh - 16px);
-  }
-  #IntegrationEditModal .modal-body-content {
-    max-height: calc(100vh - 130px);
-  }
-  #IntegrationEditModal .ai-profile-form-group,
-  .ai-profile-row > .form-group,
-  .ai-profile-row > .form-group > .col-xs-12 {
+  #IntegrationEditModal.ai-email-sections-modal .ai-profile-row,
+  #IntegrationEditModal.ai-email-sections-modal .ai-profile-form-group,
+  .ai-email-sections-modal .ai-profile-row > .form-group,
+  .ai-email-sections-modal .ai-profile-row > .form-group > .col-xs-12 {
     display: block !important;
   }
-  #IntegrationEditModal .ai-profile-form-group > [class*="col-"],
-  .ai-profile-row > .form-group > [class*="col-"] {
+  .ai-email-sections-modal .ai-profile-form-group > [class*="col-"],
+  .ai-email-sections-modal .ai-profile-row > .form-group > [class*="col-"] {
     width: 100% !important;
   }
-  .ai-profile-row > .form-group > [class*="col-"] + [class*="col-"] {
+  .ai-email-sections-modal .ai-profile-row > .form-group > [class*="col-"] + [class*="col-"] {
     margin-top: 4px !important;
   }
-  .ai-profile-row > .form-group > .col-xs-12 > label,
-  .ai-profile-row > .form-group > .col-xs-12 > .control-label {
+  .ai-email-sections-modal .ai-profile-row > .form-group > .col-xs-12 > label,
+  .ai-email-sections-modal .ai-profile-row > .form-group > .col-xs-12 > .control-label {
     padding-top: 0;
+  }
+  .ai-email-sections-modal .ai-profile-toolbar {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -266,10 +356,16 @@
 .ai-segment-assistant__title { margin-bottom: 8px; font-weight: 600; }
 .ai-segment-assistant__prompt { width: 100%; resize: vertical; }
 .ai-segment-assistant__profile-label { display: block; margin-top: 10px; margin-bottom: 4px; font-weight: 600; }
-.ai-segment-assistant__quick-starts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.ai-segment-assistant__quick-start { font-size: 12px; }
+.ai-segment-assistant__quick-start-label { display: block; margin-top: 10px; margin-bottom: 4px; font-weight: 600; }
+.ai-segment-assistant__quick-starts { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: stretch; }
+.ai-segment-assistant__quick-start-select { min-width: 0; }
+.ai-segment-assistant__quick-start-apply { white-space: nowrap; }
 .ai-segment-assistant__actions { margin-top: 8px; }
 .ai-segment-assistant__status { min-height: 20px; margin-top: 8px; font-size: 13px; }
 .ai-segment-assistant__status.is-error { color: #c92a2a; }
 .ai-segment-assistant__status.is-success { color: #18794e; }
 .ai-segment-assistant__status.is-loading { color: #586174; }
+
+@media (max-width: 640px) {
+  .ai-segment-assistant__quick-starts { grid-template-columns: 1fr; }
+}

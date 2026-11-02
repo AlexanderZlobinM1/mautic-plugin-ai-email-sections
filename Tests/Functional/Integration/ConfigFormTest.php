@@ -8,7 +8,6 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\PluginBundle\Entity\Integration;
 use MauticPlugin\AiEmailSectionsBundle\Form\Type\ConfigAuthType;
 use MauticPlugin\AiEmailSectionsBundle\Form\Type\ConfigFeaturesType;
-use MauticPlugin\AiEmailSectionsBundle\Form\Type\ProfileApiKeyType;
 use MauticPlugin\AiEmailSectionsBundle\Form\Type\ProfileType;
 use MauticPlugin\AiEmailSectionsBundle\Integration\AiEmailSectionsIntegration;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -43,7 +42,7 @@ final class ConfigFormTest extends MauticMysqlTestCase
         $this->assertTrue($form->has('profiles'));
     }
 
-    public function testApiKeysStayOnTheEncryptedAuthTab(): void
+    public function testProfileApiKeysStayInTheEncryptedAuthPayload(): void
     {
         $features = $this->formFactory()->create(ConfigFeaturesType::class);
         $this->assertFalse($features->has('api_key'));
@@ -51,7 +50,9 @@ final class ConfigFormTest extends MauticMysqlTestCase
         $auth = $this->formFactory()->create(ConfigAuthType::class, [], [
             'integration' => $this->integration(),
         ]);
-        $this->assertTrue($auth->has('api_key'));
+        $this->assertFalse($auth->has('api_key'));
+        $this->assertTrue($auth->has('profiles'));
+        $this->assertTrue($auth->get('profiles')->getConfig()->getOption('allow_add'));
     }
 
     public function testProfileApiKeysAreRenderedForSavedProfiles(): void
@@ -69,7 +70,8 @@ final class ConfigFormTest extends MauticMysqlTestCase
         $form = $this->formFactory()->create(ConfigAuthType::class, [], ['integration' => $integration]);
 
         $this->assertTrue($form->has('profiles'));
-        $this->assertSame(ProfileApiKeyType::class, $form->get('profiles')->getConfig()->getOption('entry_type'));
+        $this->assertTrue($form->get('profiles')->has('local-qwen'));
+        $this->assertSame('', $form->get('profiles')->get('local-qwen')->getData());
     }
 
     public function testSavedProfileCanTurnPersonalisationTokensOff(): void

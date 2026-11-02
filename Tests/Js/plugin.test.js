@@ -14,6 +14,7 @@ const SOURCE = path.join(__dirname, '../../Assets/src/index.js');
 
 function loadPlugin() {
   delete window.MauticGrapesJsPlugins;
+  window.MauticAiEmailSectionsDisabled = false;
   window.MauticAiEmailSectionsConfig = {
     endpoint: '/s/ai-email-sections/generate',
     placeholderSrc: 'https://placehold.co/600x400',
@@ -50,6 +51,16 @@ describe('registration', () => {
     window.eval(fs.readFileSync(SOURCE, 'utf8'));
 
     expect(window.MauticGrapesJsPlugins.map((p) => p.name)).toEqual(['SomeoneElse', 'AiEmailSections']);
+  });
+
+  test('registers no editor features while the integration is disabled', () => {
+    const registration = loadPlugin();
+    window.MauticAiEmailSectionsDisabled = true;
+    const editor = createFakeEditor();
+    registration.plugin(editor);
+
+    expect(editor.BlockManager.get('assistant')).toBeUndefined();
+    expect(editor.Commands.get('assistant:edit')).toBeUndefined();
   });
 });
 

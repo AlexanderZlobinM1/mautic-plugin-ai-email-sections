@@ -393,8 +393,14 @@ class Config
         }
 
         $profileKeys = $keys['profiles'] ?? [];
-        if (is_array($profileKeys) && isset($profileKeys[$profileId]) && '' !== (string) $profileKeys[$profileId]) {
-            return (string) $profileKeys[$profileId];
+        if (is_array($profileKeys) && isset($profileKeys[$profileId])) {
+            $profileKey = $profileKeys[$profileId];
+            if (is_array($profileKey)) {
+                $profileKey = $profileKey['api_key'] ?? '';
+            }
+            if ('' !== (string) $profileKey) {
+                return (string) $profileKey;
+            }
         }
 
         return isset($keys['api_key']) ? (string) $keys['api_key'] : '';

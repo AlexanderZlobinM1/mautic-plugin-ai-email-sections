@@ -19,7 +19,24 @@ function loadPage(pathname = '/s/segments/new') {
   document.getElementById('available_segment_filters').appendChild(
     fieldOption('lead', 'device_os', 'Device OS', 'device_os', { includes: 'in' })
   );
-  window.MauticAiEmailSectionsConfig = { segmentEndpoint: '/s/ai-email-sections/segment-plan' };
+  window.MauticAiEmailSectionsConfig = {
+    segmentEndpoint: '/s/ai-email-sections/segment-plan',
+    quickStarts: [
+      {
+        id: 'recent_visitors',
+        label: 'mautic.aiemailsections.segment.quick_start.recent_visitors',
+        promptKey: 'mautic.aiemailsections.segment.quick_start.recent_visitors.prompt',
+        prompt: 'Contacts who visited the website in the last 30 days',
+      },
+      {
+        id: 'inactive_contacts',
+        label: 'mautic.aiemailsections.segment.quick_start.inactive_contacts',
+        promptKey: 'mautic.aiemailsections.segment.quick_start.inactive_contacts.prompt',
+        prompt: 'Contacts who have not opened an email in the last 90 days',
+      },
+    ],
+  };
+  window.MauticAiEmailSectionsDisabled = false;
   window.mauticAjaxCsrf = 'token';
   window.Mautic = { translate: (key) => key };
   window.__aiSegmentAjaxComplete = null;
@@ -42,6 +59,15 @@ describe('new segment assistant', () => {
     expect(document.getElementById('ai-segment-assistant')).toBeNull();
   });
 
+  test('is not rendered while the integration is disabled', () => {
+    loadPage('/s/segments/new');
+    document.getElementById('ai-segment-assistant').remove();
+    window.MauticAiEmailSectionsDisabled = true;
+    window.__aiSegmentAjaxComplete();
+
+    expect(document.getElementById('ai-segment-assistant')).toBeNull();
+  });
+
   test('is rendered after Mautic replaces the page during internal navigation', () => {
     loadPage('/s/segments');
     expect(document.getElementById('ai-segment-assistant')).toBeNull();
@@ -51,6 +77,25 @@ describe('new segment assistant', () => {
     window.__aiSegmentAjaxComplete();
 
     expect(document.getElementById('ai-segment-assistant')).not.toBeNull();
+  });
+
+  test('uses a single ready-made prompt selector and apply button', () => {
+    loadPage();
+
+    const select = document.querySelector('.ai-segment-assistant__quick-start-select');
+    const apply = document.querySelector('.ai-segment-assistant__quick-start-apply');
+    expect(select.options).toHaveLength(3);
+    expect(document.querySelectorAll('.ai-segment-assistant__quick-start')).toHaveLength(0);
+    expect(apply.disabled).toBe(true);
+
+    select.value = 'inactive_contacts';
+    select.dispatchEvent(new Event('change'));
+    apply.click();
+
+    expect(apply.disabled).toBe(false);
+    expect(document.querySelector('.ai-segment-assistant__prompt').value).toBe(
+      'Contacts who have not opened an email in the last 90 days'
+    );
   });
 
   test('sends the exact live field aliases and operators to the endpoint', async () => {

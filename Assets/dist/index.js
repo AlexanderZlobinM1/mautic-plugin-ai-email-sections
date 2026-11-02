@@ -32,6 +32,10 @@
     return window.MauticAiEmailSectionsConfig || {};
   }
 
+  function disabled() {
+    return window.MauticAiEmailSectionsDisabled === true || !config().endpoint;
+  }
+
   function t(key, fallback) {
     if (window.Mautic && typeof window.Mautic.translate === 'function') {
       var translated = window.Mautic.translate(key);
@@ -45,6 +49,9 @@
   /* ------------------------------------------------------------------ API */
 
   function requestGeneration(payload) {
+    if (disabled()) {
+      return Promise.reject(new Error(t('mautic.aiemailsections.error.disabled', 'The assistant is disabled.')));
+    }
     return fetch(config().endpoint, {
       method: 'POST',
       credentials: 'same-origin',
@@ -438,6 +445,9 @@
   /* ------------------------------------------------------------- plugin */
 
   function AiEmailSections(editor) {
+    if (disabled()) {
+      return;
+    }
     var dc = editor.DomComponents;
 
     /* Trait with textarea, button and status line. */

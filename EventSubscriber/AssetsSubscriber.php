@@ -46,6 +46,13 @@ class AssetsSubscriber implements EventSubscriberInterface
             return;
         }
 
+        // The integration editor itself must remain usable while the
+        // integration is disabled. Its profile repeater and layout assets are
+        // needed to configure/enable the integration and do not expose AI
+        // runtime credentials or call provider endpoints.
+        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/config.js?v=3.0.2');
+        $assetsEvent->addStylesheet('plugins/AiEmailSectionsBundle/Assets/dist/index.css?v=3.0.2');
+
         if (!$this->config->isPublished()) {
             return;
         }
@@ -66,7 +73,6 @@ class AssetsSubscriber implements EventSubscriberInterface
 
         $assetsEvent->addScriptDeclaration('window.MauticAiEmailSectionsConfig = '.$settings.';', 'head');
         $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/index.js?v=3.0.2');
-        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/config.js?v=3.0.2');
         // Mautic changes admin pages through AJAX, so the segment runtime must
         // already be present before the user navigates to the creation form.
         $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/segment.js?v=3.0.2');
@@ -105,29 +111,81 @@ class AssetsSubscriber implements EventSubscriberInterface
         return 1 === preg_match('~^/s/~', $request->getPathInfo());
     }
 
-    /** @return array<int, array{id: string, label: string, prompt: string}> */
+    /** @return array<int, array{id: string, label: string, promptKey: string, prompt: string}> */
     private function quickStarts(): array
     {
         return [
             [
                 'id'     => 'recent_visitors',
                 'label'  => 'mautic.aiemailsections.segment.quick_start.recent_visitors',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.recent_visitors.prompt',
                 'prompt' => 'Contacts who visited the website in the last 30 days',
+            ],
+            [
+                'id'     => 'pricing_visitors',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.pricing_visitors',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.pricing_visitors.prompt',
+                'prompt' => 'Contacts who visited a page whose URL contains pricing in the last 30 days',
+            ],
+            [
+                'id'     => 'recent_email_openers',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.recent_email_openers',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.recent_email_openers.prompt',
+                'prompt' => 'Contacts who opened an email in the last 30 days',
+            ],
+            [
+                'id'     => 'recent_email_clickers',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.recent_email_clickers',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.recent_email_clickers.prompt',
+                'prompt' => 'Contacts who clicked an email link in the last 30 days',
+            ],
+            [
+                'id'     => 'recent_form_submitters',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.recent_form_submitters',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.recent_form_submitters.prompt',
+                'prompt' => 'Contacts who submitted a form in the last 30 days',
+            ],
+            [
+                'id'     => 'new_contacts',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.new_contacts',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.new_contacts.prompt',
+                'prompt' => 'Contacts created in the last 7 days',
             ],
             [
                 'id'     => 'company_prefix',
                 'label'  => 'mautic.aiemailsections.segment.quick_start.company_prefix',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.company_prefix.prompt',
                 'prompt' => 'Contacts whose company name starts with A',
+            ],
+            [
+                'id'     => 'known_company',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.known_company',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.known_company.prompt',
+                'prompt' => 'Contacts whose company name is not empty',
             ],
             [
                 'id'     => 'mobile_contacts',
                 'label'  => 'mautic.aiemailsections.segment.quick_start.mobile_contacts',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.mobile_contacts.prompt',
                 'prompt' => 'Contacts using an Android mobile device',
+            ],
+            [
+                'id'     => 'ios_contacts',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.ios_contacts',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.ios_contacts.prompt',
+                'prompt' => 'Contacts using an iOS mobile device',
             ],
             [
                 'id'     => 'inactive_contacts',
                 'label'  => 'mautic.aiemailsections.segment.quick_start.inactive_contacts',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.inactive_contacts.prompt',
                 'prompt' => 'Contacts who have not opened an email in the last 90 days',
+            ],
+            [
+                'id'     => 'unengaged_contacts',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.unengaged_contacts',
+                'promptKey' => 'mautic.aiemailsections.segment.quick_start.unengaged_contacts.prompt',
+                'prompt' => 'Contacts who have not visited the website and have not opened an email in the last 90 days',
             ],
         ];
     }
