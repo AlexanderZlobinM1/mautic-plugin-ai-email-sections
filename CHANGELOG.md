@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.2 - test-only candidate - 2026-11-02
+
+- Rebuild the Mautic integration modal layout around its native Bootstrap form
+  wrappers so profile labels and controls keep usable widths.
+- Add bounded modal scrolling, responsive tabs and profile field reflow without
+  horizontal overflow.
+
 ## 3.0.1 - 2026-11-02
 
 - Fix the Features tab profile editor layout so profile cards stay inside the

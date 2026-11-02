@@ -60,72 +60,197 @@
  * panel edge instead. */
 .gjs-pn-options { right: 300px; }
 
-/* Integration settings: keep the unlimited profile collection inside the
- * modal instead of inheriting Mautic's nested label/control columns. */
-.ai-profile-form-group > .control-label,
-.ai-profile-form-group > .controls {
-  float: none;
-  width: 100%;
+/* Integration settings: the native Mautic integration form wraps every
+ * field in Bootstrap columns. Keep those wrappers, but make the modal and
+ * profile repeater own their sizing instead of inheriting narrow columns. */
+#IntegrationEditModal .modal-dialog {
+  width: calc(100vw - 32px);
+  max-width: 1200px;
+  margin: 16px auto;
 }
-.ai-profile-form-group > .control-label {
+#IntegrationEditModal .modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px);
+}
+#IntegrationEditModal .modal-body {
+  min-height: 0;
+  overflow: hidden;
+}
+#IntegrationEditModal .modal-body-content {
+  min-width: 0;
+  max-height: calc(100vh - 150px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+#IntegrationEditModal .tab-content,
+#IntegrationEditModal .tab-pane,
+#IntegrationEditModal #features-container {
+  min-width: 0;
+}
+#IntegrationEditModal .nav-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+#IntegrationEditModal .nav-tabs > li {
+  float: none;
+  flex: 0 0 auto;
+}
+#IntegrationEditModal #features-container > .row,
+#IntegrationEditModal #features-container > .row > [class*="col-"] {
+  min-width: 0;
+}
+
+/* The collection row itself uses Mautic's two-column config layout. */
+#IntegrationEditModal .ai-profile-form-group {
+  display: grid !important;
+  grid-template-columns: minmax(12rem, 32%) minmax(0, 1fr);
+  column-gap: 24px;
+  width: 100%;
+  margin: 0 0 16px;
+}
+#IntegrationEditModal .ai-profile-form-group > [class*="col-"] {
+  float: none !important;
+  width: auto !important;
+  min-width: 0;
+  padding-right: 0;
+  padding-left: 0;
+}
+#IntegrationEditModal .ai-profile-form-group > [class*="col-"]:first-child {
+  grid-column: 1;
+}
+#IntegrationEditModal .ai-profile-form-group > [class*="col-"]:last-child {
+  grid-column: 2;
+}
+#IntegrationEditModal .ai-profile-form-group > .col-xs-12 {
+  grid-column: 1 / -1;
+}
+#IntegrationEditModal .ai-profile-form-group .control-label,
+#IntegrationEditModal .ai-profile-form-group > [class*="col-"] > label {
   display: block;
+  max-width: 100%;
   margin-bottom: 8px;
 }
-.ai-profile-form-group > .controls {
-  clear: both;
-}
+
 .ai-profile-collection {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 16px;
   width: 100%;
+  min-width: 0;
   margin: 0;
 }
 .ai-profile-collection > .ai-profile-row {
   min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
   padding: 16px;
   border: 1px solid #dfe3e8;
   border-radius: 6px;
   background: #fafbfc;
 }
+
+/* ProfileType fields are rendered either as col-md-4/col-md-8 pairs or as a
+ * single col-xs-12 wrapper, depending on the exact Mautic form theme. */
 .ai-profile-row > .form-group {
-  display: grid;
-  grid-template-columns: minmax(125px, 34%) minmax(0, 1fr);
+  display: grid !important;
+  grid-template-columns: minmax(12rem, 34%) minmax(0, 1fr);
   gap: 8px 12px;
   align-items: start;
-  margin-bottom: 12px;
+  width: 100% !important;
+  min-width: 0;
+  margin: 0 0 12px !important;
+  padding: 0 !important;
 }
-.ai-profile-row > .form-group > .control-label,
-.ai-profile-row > .form-group > .controls {
-  float: none;
-  width: auto;
+.ai-profile-row > .form-group > [class*="col-"] {
+  float: none !important;
+  width: auto !important;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+.ai-profile-row > .form-group > [class*="col-"]:first-child {
+  grid-column: 1;
+}
+.ai-profile-row > .form-group > [class*="col-"]:last-child {
+  grid-column: 2;
+}
+.ai-profile-row > .form-group > .col-xs-12 {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(12rem, 34%) minmax(0, 1fr);
+  gap: 8px 12px;
+}
+.ai-profile-row > .form-group > .col-xs-12 > label,
+.ai-profile-row > .form-group > .col-xs-12 > .control-label {
+  grid-column: 1;
+  padding-top: 7px;
+}
+.ai-profile-row > .form-group > .col-xs-12 > .form-control,
+.ai-profile-row > .form-group > .col-xs-12 > select,
+.ai-profile-row > .form-group > .col-xs-12 > textarea,
+.ai-profile-row > .form-group > .col-xs-12 > .choice-wrapper,
+.ai-profile-row > .form-group > .col-xs-12 > .controls {
+  grid-column: 2;
   min-width: 0;
 }
-.ai-profile-row > .form-group > .control-label {
-  padding-top: 7px;
+.ai-profile-row > .form-group > .col-md-8 > div,
+.ai-profile-row > .form-group > .col-sm-8 > div {
+  min-width: 0;
 }
 .ai-profile-row .form-control,
 .ai-profile-row select,
 .ai-profile-row textarea,
-.ai-profile-row input {
+.ai-profile-row input:not([type="hidden"]),
+.ai-profile-row .choice-wrapper,
+.ai-profile-row .btn-group {
   box-sizing: border-box;
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
 }
 .ai-profile-row textarea {
   min-height: 72px;
+  resize: vertical;
+}
+.ai-profile-row .btn-group {
+  display: flex;
+}
+.ai-profile-row .btn-group > .btn {
+  flex: 1 1 0;
+  min-width: 0;
 }
 .ai-profile-row > .ai-profile-remove {
   margin-top: 4px;
 }
 @media (max-width: 720px) {
-  .ai-profile-collection {
-    grid-template-columns: 1fr;
+  #IntegrationEditModal .modal-dialog {
+    width: calc(100vw - 16px);
+    margin: 8px auto;
   }
-  .ai-profile-row > .form-group {
-    grid-template-columns: 1fr;
-    gap: 4px;
+  #IntegrationEditModal .modal-content {
+    max-height: calc(100vh - 16px);
   }
-  .ai-profile-row > .form-group > .control-label {
+  #IntegrationEditModal .modal-body-content {
+    max-height: calc(100vh - 130px);
+  }
+  #IntegrationEditModal .ai-profile-form-group,
+  .ai-profile-row > .form-group,
+  .ai-profile-row > .form-group > .col-xs-12 {
+    display: block !important;
+  }
+  #IntegrationEditModal .ai-profile-form-group > [class*="col-"],
+  .ai-profile-row > .form-group > [class*="col-"] {
+    width: 100% !important;
+  }
+  .ai-profile-row > .form-group > [class*="col-"] + [class*="col-"] {
+    margin-top: 4px !important;
+  }
+  .ai-profile-row > .form-group > .col-xs-12 > label,
+  .ai-profile-row > .form-group > .col-xs-12 > .control-label {
     padding-top: 0;
   }
 }
