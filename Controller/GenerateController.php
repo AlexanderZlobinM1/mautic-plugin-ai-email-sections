@@ -94,6 +94,7 @@ class GenerateController extends AjaxController
         $mode   = PromptBuilder::MODE_EDIT === ($payload['mode'] ?? '') ? PromptBuilder::MODE_EDIT : PromptBuilder::MODE_CREATE;
         $prompt = trim((string) ($payload['prompt'] ?? ''));
         $source = isset($payload['source']) ? trim((string) $payload['source']) : null;
+        $profileId = isset($payload['profile']) && is_string($payload['profile']) ? $payload['profile'] : null;
 
         if ('' === $prompt) {
             return $this->error('bad_request', 'mautic.aiemailsections.error.empty', Response::HTTP_BAD_REQUEST);
@@ -125,7 +126,7 @@ class GenerateController extends AjaxController
         /** @var GenerationRepository $repository */
         $repository = $entityManager->getRepository(Generation::class);
 
-        if (null !== $userId && $this->overRateLimit($repository, $userId, $config)) {
+        if (null !== $userId && $this->overRateLimit($repository, $userId, $config, $profileId)) {
             return $this->error(
                 'rate_limited',
                 'mautic.aiemailsections.error.rate_limited',
@@ -150,12 +151,12 @@ class GenerateController extends AjaxController
             ->setMode($mode)
             ->setPrompt($prompt)
             ->setSourceMjml($source)
-            ->setModel($config->getModel());
+            ->setModel($config->getModel($profileId));
 
         $sessionReleaser->release($request);
 
         try {
-            $outcome = $generatorFactory->create()->generate($mode, $prompt, $source, $themeId);
+            $outcome = $generatorFactory->create($profileId)->generate($mode, $prompt, $source, $themeId);
         } catch (GenerationFailedException $exception) {
             $this->persist($entityManager, $record
                 ->setStatus(Generation::STATUS_FAILED)
@@ -227,6 +228,7 @@ class GenerateController extends AjaxController
         $payload = $request->toArray();
         $prompt  = trim((string) ($payload['prompt'] ?? ''));
         $catalog = $payload['catalog'] ?? null;
+        $profileId = isset($payload['profile']) && is_string($payload['profile']) ? $payload['profile'] : null;
 
         if ('' === $prompt || mb_strlen($prompt) > self::MAX_PROMPT_LENGTH || !is_array($catalog) || [] === $catalog) {
             return $this->error('bad_request', 'mautic.aiemailsections.error.bad_request', Response::HTTP_BAD_REQUEST);
@@ -239,7 +241,7 @@ class GenerateController extends AjaxController
         $sessionReleaser->release($request);
 
         try {
-            return new JsonResponse($assistant->generate($prompt, $catalog));
+            return new JsonResponse($assistant->generate($prompt, $catalog, $profileId));
         } catch (SegmentPlanException $exception) {
             $this->logger->warning('AI segment plan was rejected.', ['reason' => $exception->getMessage()]);
 
@@ -253,9 +255,9 @@ class GenerateController extends AjaxController
         }
     }
 
-    private function overRateLimit(GenerationRepository $repository, int $userId, Config $config): bool
+    private function overRateLimit(GenerationRepository $repository, int $userId, Config $config, ?string $profileId = null): bool
     {
-        $limit = $config->getRateLimitPerHour();
+        $limit = $config->getRateLimitPerHour($profileId);
 
         if ($limit <= 0) {
             return false;

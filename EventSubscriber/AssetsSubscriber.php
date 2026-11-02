@@ -56,16 +56,21 @@ class AssetsSubscriber implements EventSubscriberInterface
             'segmentEndpoint' => $this->urlGenerator->generate('ai_email_sections_segment_plan'),
             'placeholderSrc' => $this->config->getPlaceholderImage(),
             'maxSourceBytes' => $this->config->getMaxSourceBytes(),
+            'profiles'       => $this->config->getFrontendProfiles(),
+            'profileThemes'  => $this->config->getFrontendProfileThemes(),
+            'profile'        => $this->config->getDefaultProfileId(),
+            'quickStarts'    => $this->quickStarts(),
             'themes'         => $this->themeCatalog->all(),
             'theme'          => $this->themeCatalog->resolve($this->themeOfEmailBeingEdited(), $this->config->getThemeId()),
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
 
         $assetsEvent->addScriptDeclaration('window.MauticAiEmailSectionsConfig = '.$settings.';', 'head');
-        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/index.js?v=2.0.2');
+        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/index.js?v=3.0.0');
+        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/config.js?v=3.0.0');
         // Mautic changes admin pages through AJAX, so the segment runtime must
         // already be present before the user navigates to the creation form.
-        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/segment.js?v=2.0.2-2');
-        $assetsEvent->addStylesheet('plugins/AiEmailSectionsBundle/Assets/dist/index.css?v=2.0.2');
+        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/segment.js?v=3.0.0');
+        $assetsEvent->addStylesheet('plugins/AiEmailSectionsBundle/Assets/dist/index.css?v=3.0.0');
     }
 
     /**
@@ -98,6 +103,33 @@ class AssetsSubscriber implements EventSubscriberInterface
         }
 
         return 1 === preg_match('~^/s/~', $request->getPathInfo());
+    }
+
+    /** @return array<int, array{id: string, label: string, prompt: string}> */
+    private function quickStarts(): array
+    {
+        return [
+            [
+                'id'     => 'recent_visitors',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.recent_visitors',
+                'prompt' => 'Contacts who visited the website in the last 30 days',
+            ],
+            [
+                'id'     => 'company_prefix',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.company_prefix',
+                'prompt' => 'Contacts whose company name starts with A',
+            ],
+            [
+                'id'     => 'mobile_contacts',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.mobile_contacts',
+                'prompt' => 'Contacts using an Android mobile device',
+            ],
+            [
+                'id'     => 'inactive_contacts',
+                'label'  => 'mautic.aiemailsections.segment.quick_start.inactive_contacts',
+                'prompt' => 'Contacts who have not opened an email in the last 90 days',
+            ],
+        ];
     }
 
 }

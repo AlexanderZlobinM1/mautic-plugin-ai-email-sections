@@ -4,195 +4,70 @@ declare(strict_types=1);
 
 namespace MauticPlugin\AiEmailSectionsBundle\Form\Type;
 
-use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
 use MauticPlugin\AiEmailSectionsBundle\Integration\Config;
-use MauticPlugin\AiEmailSectionsBundle\Service\ThemeCatalog;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
-use Symfony\Component\Form\Extension\Core\Type\NumberType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\UrlType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Length;
 
-/**
- * Feature settings tab. No client-specific value is hardcoded: a freshly
- * installed plugin works with these defaults and the default.yaml theme.
- */
-class ConfigFeaturesType extends AbstractType
+/** Feature settings for an unlimited collection of selectable AI profiles. */
+final class ConfigFeaturesType extends AbstractType
 {
-    private const PROVIDER_UI_SCRIPT = "(function(s){var f=s.form,t=function(n,v){var e=f&&f.querySelector('[name$=\"['+n+']\"]'),r=e&&e.closest('.row.form-group');if(r){r.style.display=v?'':'none';}};t('base_url',s.value==='openai');t('temperature',s.value!=='anthropic');})(this)";
-
-    public function __construct(private readonly ThemeCatalog $themeCatalog)
+    public function __construct(private readonly Config $config)
     {
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add('provider', ChoiceType::class, [
-            'label'      => 'mautic.aiemailsections.config.provider',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => [
-                'class'    => 'form-control',
-                'tooltip'  => 'mautic.aiemailsections.config.provider.tooltip',
-                'onfocus'  => self::PROVIDER_UI_SCRIPT,
-                'onclick'  => self::PROVIDER_UI_SCRIPT,
-                'onchange' => self::PROVIDER_UI_SCRIPT,
-            ],
-            'choices' => [
-                'mautic.aiemailsections.config.provider.openai'       => Config::PROVIDER_OPENAI,
-                'mautic.aiemailsections.config.provider.openai_cloud' => Config::PROVIDER_OPENAI_CLOUD,
-                'mautic.aiemailsections.config.provider.google'       => Config::PROVIDER_GOOGLE,
-                'mautic.aiemailsections.config.provider.deepseek'     => Config::PROVIDER_DEEPSEEK,
-                'mautic.aiemailsections.config.provider.qwen'         => Config::PROVIDER_QWEN,
-                'mautic.aiemailsections.config.provider.groq'         => Config::PROVIDER_GROQ,
-                'mautic.aiemailsections.config.provider.openrouter'   => Config::PROVIDER_OPENROUTER,
-                'mautic.aiemailsections.config.provider.anthropic'    => Config::PROVIDER_ANTHROPIC,
-            ],
-            // No "data" default: it would win over the stored value on every
-            // render. With no placeholder the first choice, which is the
-            // default provider, is what an unconfigured install shows.
+        $data = is_array($options['data'] ?? null) ? $options['data'] : [];
+        $profiles = array_key_exists('profiles', $data) && is_array($data['profiles'])
+            ? $data['profiles']
+            : $this->config->getProfilesForForm();
+
+        $builder->add('default_profile', ChoiceType::class, [
+            'label'       => 'mautic.aiemailsections.profile.default',
+            'choices'     => $this->profileChoices($profiles),
             'required'    => false,
             'placeholder' => false,
+            'help'        => 'mautic.aiemailsections.profile.default.help',
         ]);
 
-        $builder->add('brand', TextareaType::class, [
-            'label'      => 'mautic.aiemailsections.config.brand',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => [
-                'class'       => 'form-control',
-                'rows'        => 5,
-                'tooltip'     => 'mautic.aiemailsections.config.brand.tooltip',
-                'placeholder' => 'mautic.aiemailsections.config.brand.placeholder',
-            ],
-            'required'    => false,
-            'constraints' => [new Length(max: Config::MAX_BRAND_BRIEF_CHARS)],
-        ]);
-
-        $builder->add('tokens_enabled', YesNoButtonGroupType::class, [
-            'label'      => 'mautic.aiemailsections.config.tokens_enabled',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => ['tooltip' => 'mautic.aiemailsections.config.tokens_enabled.tooltip'],
-            'data'       => array_key_exists('tokens_enabled', $options['data'] ?? [])
-                ? (bool) $options['data']['tokens_enabled']
-                : true,
-        ]);
-
-        $builder->add('tokens_excluded', TextareaType::class, [
-            'label'      => 'mautic.aiemailsections.config.tokens_excluded',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => [
-                'class'       => 'form-control',
-                'rows'        => 3,
-                'tooltip'     => 'mautic.aiemailsections.config.tokens_excluded.tooltip',
-                'placeholder' => 'mautic.aiemailsections.config.tokens_excluded.placeholder',
-            ],
-            'required' => false,
-        ]);
-
-        $builder->add('base_url', UrlType::class, [
-            'label'      => 'mautic.aiemailsections.config.base_url',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => [
-                'class'       => 'form-control',
-                'tooltip'     => 'mautic.aiemailsections.config.base_url.tooltip',
-                'placeholder' => 'mautic.aiemailsections.config.provider_default',
-            ],
-            'required'         => false,
-            'default_protocol' => null,
-        ]);
-
-        $builder->add('model', TextType::class, [
-            'label'      => 'mautic.aiemailsections.config.model',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => [
-                'class'       => 'form-control',
-                'tooltip'     => 'mautic.aiemailsections.config.model.tooltip',
-                'placeholder' => 'mautic.aiemailsections.config.provider_default',
-            ],
-            'required' => false,
-        ]);
-
-        $builder->add('temperature', NumberType::class, [
-            'label'      => 'mautic.aiemailsections.config.temperature',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => [
-                'class'       => 'form-control',
-                'tooltip'     => 'mautic.aiemailsections.config.temperature.tooltip',
-                'placeholder' => (string) Config::DEFAULT_TEMPERATURE,
-            ],
-            'required' => false,
-            'scale'    => 2,
-        ]);
-
-        $builder->add('max_tokens', IntegerType::class, [
-            'label'      => 'mautic.aiemailsections.config.max_tokens',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => [
-                'class'       => 'form-control',
-                'tooltip'     => 'mautic.aiemailsections.config.max_tokens.tooltip',
-                'placeholder' => (string) Config::DEFAULT_MAX_TOKENS,
-            ],
-            'required' => false,
-        ]);
-
-        $builder->add('placeholder_image', TextType::class, [
-            'label'      => 'mautic.aiemailsections.config.placeholder_image',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => [
-                'class'       => 'form-control',
-                'tooltip'     => 'mautic.aiemailsections.config.placeholder_image.tooltip',
-                'placeholder' => Config::DEFAULT_PLACEHOLDER,
-            ],
-            'required' => false,
-        ]);
-
-        $builder->add('rate_limit', IntegerType::class, [
-            'label'      => 'mautic.aiemailsections.config.rate_limit',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => ['class' => 'form-control', 'placeholder' => (string) Config::DEFAULT_RATE_LIMIT],
-            'required'   => false,
-        ]);
-
-        $builder->add('timeout', IntegerType::class, [
-            'label'      => 'mautic.aiemailsections.config.timeout',
-            'label_attr' => ['class' => 'control-label'],
-            'attr'       => ['class' => 'form-control', 'placeholder' => (string) Config::DEFAULT_TIMEOUT],
-            'required'   => false,
-        ]);
-
-        $builder->add('theme', ChoiceType::class, [
-            'label'       => 'mautic.aiemailsections.config.theme',
-            'label_attr'  => ['class' => 'control-label'],
-            'attr'        => ['class' => 'form-control'],
-            'choices'     => $this->availableThemes(),
-            'required'    => false,
-            'placeholder' => false,
+        $builder->add('profiles', CollectionType::class, [
+            'label'         => 'mautic.aiemailsections.profile.collection',
+            'entry_type'    => ProfileType::class,
+            'entry_options' => ['label' => false],
+            'allow_add'     => true,
+            'allow_delete'  => true,
+            'by_reference'  => false,
+            'prototype'     => true,
+            'data'          => $profiles,
+            'attr'           => ['class' => 'ai-profile-collection'],
+            'help'           => 'mautic.aiemailsections.profile.collection.help',
         ]);
     }
 
-    /**
-     * IntegrationFeatureSettingsType adds this form with nothing but
-     * ['label' => false], so "integration" must be optional here. Requiring it,
-     * as the auth tab does, makes the configuration modal blow up with an alert
-     * instead of opening.
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
+        // The IntegrationsBundle's feature-settings wrapper does not always
+        // pass the integration object, while the auth form does.
         $resolver->setDefined(['integration']);
     }
 
-    /**
-     * @return array<string, string>
-     */
-    /**
-     * @return array<string, string> label => id, which is the order ChoiceType wants
-     */
-    private function availableThemes(): array
+    /** @param array<int, array<string, mixed>> $profiles */
+    private function profileChoices(array $profiles): array
     {
-        return array_flip($this->themeCatalog->all());
+        $choices = [];
+        foreach ($profiles as $profile) {
+            if (is_array($profile) && isset($profile['id'], $profile['name'])) {
+                $label = (string) $profile['name'];
+                if (isset($choices[$label])) {
+                    $label .= ' ('.(string) $profile['id'].')';
+                }
+                $choices[$label] = (string) $profile['id'];
+            }
+        }
+
+        return $choices;
     }
 }

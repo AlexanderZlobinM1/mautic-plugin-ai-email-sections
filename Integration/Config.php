@@ -97,38 +97,290 @@ class Config
     /**
      * @return self::PROVIDER_*
      */
-    public function getProvider(): string
+    public function getProvider(?string $profileId = null): string
     {
-        $provider = $this->string('provider', self::DEFAULT_PROVIDER);
-
-        // The value comes out of a database column rather than out of the
-        // form, so it can hold anything. Falling back beats fataling.
-        return in_array($provider, array_keys(self::providerDefaults()), true)
-            ? $provider
-            : self::DEFAULT_PROVIDER;
+        return (string) $this->getProfile($profileId)['provider'];
     }
 
     /**
      * The default follows the provider, so switching the dropdown and saving
      * works without also retyping the endpoint.
      */
-    public function getBaseUrl(): string
+    public function getBaseUrl(?string $profileId = null): string
     {
-        $default = self::providerDefaults()[$this->getProvider()]['base_url'];
-
-        $url = $this->string('base_url', $default);
-
-        // The value becomes the target of server-side requests, where only
-        // http(s) has a legitimate use. Anything else falls back to the
-        // provider default rather than turning the plugin into a proxy.
-        if (!in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
-            return $default;
-        }
-
-        return $url;
+        return (string) $this->getProfile($profileId)['base_url'];
     }
 
     public function getApiKey(): string
+    {
+        return $this->getApiKeyForProfile();
+    }
+
+    public function getApiKeyForProfile(?string $profileId = null): string
+    {
+        $profile = $this->getProfile($profileId, false);
+
+        return $this->apiKeyFor((string) $profile['id']);
+    }
+
+    public function getModel(?string $profileId = null): string
+    {
+        return (string) $this->getProfile($profileId)['model'];
+    }
+
+    public function getTemperature(?string $profileId = null): float
+    {
+        return (float) $this->getProfile($profileId)['temperature'];
+    }
+
+    public function getMaxTokens(?string $profileId = null): int
+    {
+        return (int) $this->getProfile($profileId)['max_tokens'];
+    }
+
+    public function getBrandBrief(?string $profileId = null): string
+    {
+        return (string) $this->getProfile($profileId)['brand'];
+    }
+
+    public function areTokensEnabled(?string $profileId = null): bool
+    {
+        return (bool) $this->getProfile($profileId)['tokens_enabled'];
+    }
+
+    /** @return string[] */
+    public function getExcludedTokens(?string $profileId = null): array
+    {
+        return (array) $this->getProfile($profileId)['tokens_excluded'];
+    }
+
+    public function getPlaceholderImage(?string $profileId = null): string
+    {
+        return (string) $this->getProfile($profileId)['placeholder_image'];
+    }
+
+    public function getRateLimitPerHour(?string $profileId = null): int
+    {
+        return (int) $this->getProfile($profileId)['rate_limit'];
+    }
+
+    public function getThemeId(?string $profileId = null): string
+    {
+        return (string) $this->getProfile($profileId)['theme'];
+    }
+
+    public function getTimeoutSeconds(?string $profileId = null): int
+    {
+        return (int) $this->getProfile($profileId)['timeout'];
+    }
+
+    /**
+     * The profile selected in the builder. Unknown or deleted ids always fall
+     * back to the configured default instead of becoming a way to bypass the
+     * profile allowlist.
+     */
+    public function getProfile(?string $profileId = null, bool $withApiKey = true): array
+    {
+        $profiles = $this->getProfiles();
+        $defaultId = $this->getDefaultProfileId($profiles);
+        $wanted = $profileId ?: $defaultId;
+
+        foreach ($profiles as $profile) {
+            if ($profile['id'] === $wanted) {
+                if ($withApiKey) {
+                    $profile['api_key'] = $this->apiKeyFor($profile['id']);
+                }
+
+                return $profile;
+            }
+        }
+
+        foreach ($profiles as $profile) {
+            if ($profile['id'] === $defaultId) {
+                if ($withApiKey) {
+                    $profile['api_key'] = $this->apiKeyFor($profile['id']);
+                }
+
+                return $profile;
+            }
+        }
+
+        throw new \LogicException('At least one AI profile must always exist.');
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getProfiles(): array
+    {
+        $settings = $this->getFeatureSettings();
+        $raw = $settings['profiles'] ?? null;
+
+        if (!is_array($raw) || [] === $raw) {
+            return [$this->normaliseProfile('default', [
+                'name' => 'Default',
+            ], $settings)];
+        }
+
+        $profiles = [];
+        $usedIds = [];
+        foreach ($raw as $key => $profile) {
+            if (!is_array($profile)) {
+                continue;
+            }
+
+            $id = trim((string) ($profile['id'] ?? ''));
+            if ('' === $id && !is_numeric($key)) {
+                $id = trim((string) $key);
+            }
+            if (!preg_match('/\A[a-z0-9][a-z0-9_-]{0,63}\z/i', $id)) {
+                $id = 'profile-'.(count($profiles) + 1);
+            }
+            while (isset($usedIds[$id])) {
+                $id = 'profile-'.(count($profiles) + 1);
+            }
+
+            $usedIds[$id] = true;
+            $profiles[] = $this->normaliseProfile($id, $profile, $settings);
+        }
+
+        return [] === $profiles
+            ? [$this->normaliseProfile('default', ['name' => 'Default'], $settings)]
+            : $profiles;
+    }
+
+    /**
+     * Form fields use a textarea for excluded tokens, while runtime profiles
+     * use a normalized list. Keep the two representations separate so opening
+     * the settings form never feeds an array into a textarea.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getProfilesForForm(): array
+    {
+        return array_map(static function (array $profile): array {
+            $profile['tokens_excluded'] = implode("\n", (array) ($profile['tokens_excluded'] ?? []));
+
+            return $profile;
+        }, $this->getProfiles());
+    }
+
+    /** @return array<string, string> */
+    public function getProfileChoices(): array
+    {
+        $choices = [];
+        foreach ($this->getProfiles() as $profile) {
+            $label = (string) $profile['name'];
+            if (isset($choices[$label])) {
+                $label .= ' ('.(string) $profile['id'].')';
+            }
+            $choices[$label] = $profile['id'];
+        }
+
+        return $choices;
+    }
+
+    public function getDefaultProfileId(?array $profiles = null): string
+    {
+        $profiles ??= $this->getProfiles();
+        $configured = trim((string) ($this->getFeatureSettings()['default_profile'] ?? ''));
+
+        foreach ($profiles as $profile) {
+            if ($profile['id'] === $configured) {
+                return $configured;
+            }
+        }
+
+        return (string) $profiles[0]['id'];
+    }
+
+    /** @return array<string, string> */
+    public function getFrontendProfiles(): array
+    {
+        $profiles = [];
+        foreach ($this->getProfiles() as $profile) {
+            $profiles[$profile['id']] = $profile['name'];
+        }
+
+        return $profiles;
+    }
+
+    /** @return array<string, string> */
+    public function getFrontendProfileThemes(): array
+    {
+        $themes = [];
+        foreach ($this->getProfiles() as $profile) {
+            $themes[$profile['id']] = $profile['theme'];
+        }
+
+        return $themes;
+    }
+
+    /** @return array<string, string> */
+    public static function providerChoices(): array
+    {
+        return [
+            'mautic.aiemailsections.config.provider.openai'       => self::PROVIDER_OPENAI,
+            'mautic.aiemailsections.config.provider.openai_cloud' => self::PROVIDER_OPENAI_CLOUD,
+            'mautic.aiemailsections.config.provider.google'       => self::PROVIDER_GOOGLE,
+            'mautic.aiemailsections.config.provider.deepseek'     => self::PROVIDER_DEEPSEEK,
+            'mautic.aiemailsections.config.provider.qwen'         => self::PROVIDER_QWEN,
+            'mautic.aiemailsections.config.provider.groq'         => self::PROVIDER_GROQ,
+            'mautic.aiemailsections.config.provider.openrouter'   => self::PROVIDER_OPENROUTER,
+            'mautic.aiemailsections.config.provider.anthropic'    => self::PROVIDER_ANTHROPIC,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function normaliseProfile(string $id, array $profile, array $legacy): array
+    {
+        $provider = (string) ($profile['provider'] ?? $legacy['provider'] ?? self::DEFAULT_PROVIDER);
+        if (!isset(self::providerDefaults()[$provider])) {
+            $provider = self::DEFAULT_PROVIDER;
+        }
+
+        $defaults = self::providerDefaults()[$provider];
+        $baseUrl = trim((string) ($profile['base_url'] ?? $legacy['base_url'] ?? $defaults['base_url']));
+        if (!in_array(parse_url($baseUrl, PHP_URL_SCHEME), ['http', 'https'], true)) {
+            $baseUrl = $defaults['base_url'];
+        }
+
+        $excluded = $profile['tokens_excluded'] ?? $legacy['tokens_excluded'] ?? '';
+        if (is_array($excluded)) {
+            $excludedTokens = array_values(array_filter(array_map('strval', $excluded)));
+        } else {
+            $excludedTokens = array_values(array_filter(array_map('trim', preg_split('~[\r\n,]+~', (string) $excluded) ?: [])));
+        }
+
+        return [
+            'id'               => $id,
+            'name'             => trim((string) ($profile['name'] ?? '')) ?: ucfirst($id),
+            'provider'         => $provider,
+            'base_url'         => $baseUrl,
+            'model'            => trim((string) ($profile['model'] ?? $legacy['model'] ?? $defaults['model'])) ?: $defaults['model'],
+            'brand'            => (string) ($profile['brand'] ?? $legacy['brand'] ?? ''),
+            'tokens_enabled'   => !array_key_exists('tokens_enabled', $profile)
+                ? (!array_key_exists('tokens_enabled', $legacy) || (bool) $legacy['tokens_enabled'])
+                : (bool) $profile['tokens_enabled'],
+            'tokens_excluded'  => $excludedTokens,
+            'temperature'      => isset($profile['temperature']) && '' !== (string) $profile['temperature']
+                ? (float) $profile['temperature']
+                : (isset($legacy['temperature']) && '' !== (string) $legacy['temperature'] ? (float) $legacy['temperature'] : self::DEFAULT_TEMPERATURE),
+            'max_tokens'       => isset($profile['max_tokens']) && '' !== (string) $profile['max_tokens']
+                ? (int) $profile['max_tokens']
+                : (isset($legacy['max_tokens']) && '' !== (string) $legacy['max_tokens'] ? (int) $legacy['max_tokens'] : self::DEFAULT_MAX_TOKENS),
+            'placeholder_image'=> trim((string) ($profile['placeholder_image'] ?? $legacy['placeholder_image'] ?? self::DEFAULT_PLACEHOLDER)) ?: self::DEFAULT_PLACEHOLDER,
+            'rate_limit'       => isset($profile['rate_limit']) && '' !== (string) $profile['rate_limit']
+                ? (int) $profile['rate_limit']
+                : (isset($legacy['rate_limit']) && '' !== (string) $legacy['rate_limit'] ? (int) $legacy['rate_limit'] : self::DEFAULT_RATE_LIMIT),
+            'timeout'          => isset($profile['timeout']) && '' !== (string) $profile['timeout']
+                ? (int) $profile['timeout']
+                : (isset($legacy['timeout']) && '' !== (string) $legacy['timeout'] ? (int) $legacy['timeout'] : self::DEFAULT_TIMEOUT),
+            'theme'            => trim((string) ($profile['theme'] ?? $legacy['theme'] ?? self::DEFAULT_THEME)) ?: self::DEFAULT_THEME,
+        ];
+    }
+
+    private function apiKeyFor(string $profileId): string
     {
         try {
             $keys = $this->getIntegrationEntity()->getApiKeys();
@@ -136,85 +388,16 @@ class Config
             return '';
         }
 
-        return is_array($keys) && isset($keys['api_key']) ? (string) $keys['api_key'] : '';
-    }
-
-    public function getModel(): string
-    {
-        $default = self::providerDefaults()[$this->getProvider()]['model'];
-
-        return $this->string('model', $default);
-    }
-
-    public function getTemperature(): float
-    {
-        $settings = $this->getFeatureSettings();
-
-        return isset($settings['temperature']) ? (float) $settings['temperature'] : self::DEFAULT_TEMPERATURE;
-    }
-
-    public function getMaxTokens(): int
-    {
-        return $this->int('max_tokens', self::DEFAULT_MAX_TOKENS);
-    }
-
-    /**
-     * Free text describing what the company sells and how it speaks. Empty on a
-     * fresh install: the plugin works without it, it just writes more generic
-     * copy.
-     */
-    public function getBrandBrief(): string
-    {
-        return $this->string('brand', '');
-    }
-
-    /**
-     * On by default. A generator that cannot personalise is the poorer default,
-     * and the list is small: 58 tokens is roughly 550 input tokens per call.
-     */
-    public function areTokensEnabled(): bool
-    {
-        $settings = $this->getFeatureSettings();
-
-        return !isset($settings['tokens_enabled']) || (bool) $settings['tokens_enabled'];
-    }
-
-    /**
-     * Tokens the administrator does not want offered. Accepts one per line or
-     * comma separated, with or without braces, because both are what someone
-     * types after copying from the builder.
-     *
-     * @return string[]
-     */
-    public function getExcludedTokens(): array
-    {
-        $raw = $this->string('tokens_excluded', '');
-
-        if ('' === $raw) {
-            return [];
+        if (!is_array($keys)) {
+            return '';
         }
 
-        return array_values(array_filter(array_map('trim', preg_split('~[\r\n,]+~', $raw) ?: [])));
-    }
+        $profileKeys = $keys['profiles'] ?? [];
+        if (is_array($profileKeys) && isset($profileKeys[$profileId]) && '' !== (string) $profileKeys[$profileId]) {
+            return (string) $profileKeys[$profileId];
+        }
 
-    public function getPlaceholderImage(): string
-    {
-        return $this->string('placeholder_image', self::DEFAULT_PLACEHOLDER);
-    }
-
-    public function getRateLimitPerHour(): int
-    {
-        return $this->int('rate_limit', self::DEFAULT_RATE_LIMIT);
-    }
-
-    public function getThemeId(): string
-    {
-        return $this->string('theme', self::DEFAULT_THEME);
-    }
-
-    public function getTimeoutSeconds(): int
-    {
-        return $this->int('timeout', self::DEFAULT_TIMEOUT);
+        return isset($keys['api_key']) ? (string) $keys['api_key'] : '';
     }
 
     public function getMaxSourceBytes(): int
@@ -254,21 +437,6 @@ class Config
     {
         return $this->integrationsHelper->getIntegration(AiEmailSectionsIntegration::NAME)
             ->getIntegrationConfiguration();
-    }
-
-    private function string(string $key, string $default): string
-    {
-        $settings = $this->getFeatureSettings();
-        $value    = isset($settings[$key]) ? trim((string) $settings[$key]) : '';
-
-        return '' === $value ? $default : $value;
-    }
-
-    private function int(string $key, int $default): int
-    {
-        $settings = $this->getFeatureSettings();
-
-        return isset($settings[$key]) && '' !== $settings[$key] ? (int) $settings[$key] : $default;
     }
 
     /**

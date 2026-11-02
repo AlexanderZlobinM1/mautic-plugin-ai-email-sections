@@ -21,9 +21,9 @@ final class SegmentAssistant
      *
      * @return array{groups: mixed[], summary: string}
      */
-    public function generate(string $request, array $catalog): array
+    public function generate(string $request, array $catalog, ?string $profileId = null): array
     {
-        $client   = $this->generatorFactory->createClient();
+        $client   = $this->generatorFactory->createClient($profileId);
         $messages = $this->promptBuilder->build($request, $catalog);
         $lastError = null;
 

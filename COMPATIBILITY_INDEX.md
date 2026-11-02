@@ -2,7 +2,7 @@
 
 Last synchronized from confirmed workspace evidence: 2 November 2026.
 
-Current canonical release: `2.0.5` (`f9f7427`). Declared support: Mautic 6.x, 7.x; PHP 8.3 is documented but not declared in Composer. A local validator candidate is included in the current checkout and is not yet released.
+Current canonical release: `2.0.5` (`f9f7427`). The checkout contains a pending `3.0.0` profile/quick-start candidate. Declared support: Mautic 6.x, 7.x; PHP 8.3 is documented but not declared in Composer.
 
 | Mautic | Status | Confirmed scope |
 | --- | --- | --- |
@@ -11,4 +11,4 @@ Current canonical release: `2.0.5` (`f9f7427`). Declared support: Mautic 6.x, 7.
 | 7.1.3 | ✓ | Fresh container and configuration forms, 6 Sep 2026 |
 | 7.2.0 | ✓ | Fresh container and configuration forms, 6 Sep 2026 |
 
-AI backend/API generation was not exercised by this candidate. Provider/Mac Mini health evidence is tracked separately. Update this file and the workspace `../../COMPATIBILITY_INDEX.md` row with every plugin-related change or review.
+The `3.0.0` candidate has not been deployed. Provider/Mac Mini health evidence is tracked separately, and the small-model Mautic 6/7 runtime run remains pending infrastructure availability. Update this file and the workspace `../../COMPATIBILITY_INDEX.md` row with every plugin-related change or review.

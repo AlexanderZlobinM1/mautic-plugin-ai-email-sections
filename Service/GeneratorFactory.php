@@ -22,17 +22,17 @@ class GeneratorFactory
     ) {
     }
 
-    public function create(): GeneratorService
+    public function create(?string $profileId = null): GeneratorService
     {
         return new GeneratorService(
-            $this->createClient(),
+            $this->createClient($profileId),
             new PromptBuilder(
                 $this->promptsDir(),
-                $this->config->getPlaceholderImage(),
-                $this->config->getBrandBrief(),
-                $this->availableTokens(),
+                $this->config->getPlaceholderImage($profileId),
+                $this->config->getBrandBrief($profileId),
+                $this->availableTokens($profileId),
             ),
-            new MjmlValidator($this->config->getPlaceholderImage()),
+            new MjmlValidator($this->config->getPlaceholderImage($profileId)),
         );
     }
 
@@ -40,52 +40,52 @@ class GeneratorFactory
      * Public because it is the one branch worth pinning down on its own: the
      * wrong client for the configured provider is a 400 and nothing else.
      */
-    public function createClient(): LlmClientInterface
+    public function createClient(?string $profileId = null): LlmClientInterface
     {
-        if (Config::PROVIDER_GOOGLE === $this->config->getProvider()) {
+        if (Config::PROVIDER_GOOGLE === $this->config->getProvider($profileId)) {
             return new GeminiClient(
                 $this->httpClient,
-                $this->config->getBaseUrl(),
-                $this->config->getApiKey(),
-                $this->config->getModel(),
-                $this->config->getTemperature(),
-                $this->config->getMaxTokens(),
-                $this->config->getTimeoutSeconds(),
+                $this->config->getBaseUrl($profileId),
+                $this->config->getApiKeyForProfile($profileId),
+                $this->config->getModel($profileId),
+                $this->config->getTemperature($profileId),
+                $this->config->getMaxTokens($profileId),
+                $this->config->getTimeoutSeconds($profileId),
             );
         }
 
-        if (Config::PROVIDER_ANTHROPIC === $this->config->getProvider()) {
+        if (Config::PROVIDER_ANTHROPIC === $this->config->getProvider($profileId)) {
             return new AnthropicClient(
                 $this->httpClient,
-                $this->config->getBaseUrl(),
-                $this->config->getApiKey(),
-                $this->config->getModel(),
-                $this->config->getMaxTokens(),
-                $this->config->getTimeoutSeconds(),
+                $this->config->getBaseUrl($profileId),
+                $this->config->getApiKeyForProfile($profileId),
+                $this->config->getModel($profileId),
+                $this->config->getMaxTokens($profileId),
+                $this->config->getTimeoutSeconds($profileId),
             );
         }
 
         return new OpenAiCompatibleClient(
             $this->httpClient,
-            $this->config->getBaseUrl(),
-            $this->config->getApiKey(),
-            $this->config->getModel(),
-            $this->config->getTemperature(),
-            $this->config->getMaxTokens(),
-            $this->config->getTimeoutSeconds(),
+            $this->config->getBaseUrl($profileId),
+            $this->config->getApiKeyForProfile($profileId),
+            $this->config->getModel($profileId),
+            $this->config->getTemperature($profileId),
+            $this->config->getMaxTokens($profileId),
+            $this->config->getTimeoutSeconds($profileId),
         );
     }
 
     /**
      * @return array<string, string>
      */
-    private function availableTokens(): array
+    private function availableTokens(?string $profileId = null): array
     {
-        if (!$this->config->areTokensEnabled()) {
+        if (!$this->config->areTokensEnabled($profileId)) {
             return [];
         }
 
-        return $this->tokenProvider->all($this->config->getExcludedTokens());
+        return $this->tokenProvider->all($this->config->getExcludedTokens($profileId));
     }
 
     private function promptsDir(): string

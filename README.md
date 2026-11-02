@@ -82,31 +82,28 @@ before testing; the environment is isolated test infrastructure and is not the
 MCC catalog authority.
 
 1. Open the plugin and **publish** it.
-2. **Enabled/Auth** tab: paste the API key. It is stored encrypted here, and this is the only place it may go. The Features tab writes to `featureSettings`, which is plain text in the database.
-3. **Features** tab: pick the **Provider**. Leaving *API base URL* and *Model name* empty uses that provider's defaults, which is the normal case.
-4. Leave **Offer personalisation tokens** on unless you have a reason not to; see below for what it changes.
-5. Optionally fill **Brand and tone of voice**. In a 12-case comparison this was the single change that most improved the copy.
-6. Save, then confirm the block appears in the builder. If it does not, follow *Verifying it works* below rather than guessing.
+2. **Enabled/Auth** tab: add the API key for each profile. Keys are stored encrypted here; they never go into `featureSettings` or the browser. The shared fallback key remains available for profiles that do not override it.
+3. **Features** tab: create as many profiles as needed. Each profile can have its own provider, endpoint, model, brand brief, token policy, limits and theme. Profiles with identical settings are valid too.
+4. Choose the **Default profile**, then save. The email and segment assistants still let the operator choose a profile for every generation.
+5. Save, then confirm the block appears in the builder. If it does not, follow *Verifying it works* below rather than guessing.
 
 The two tabs are built differently by the IntegrationsBundle and store to different places, which is why the key cannot simply be moved next to the rest of the connection settings.
 
 | Tab | Field | Default |
 |---|---|---|
-| Authentication (encrypted) | API key | empty |
-| Features | Provider | OpenAI-compatible |
-| Features | Brand and tone of voice | empty |
-| Features | Offer personalisation tokens | on |
-| Features | Tokens to leave out | empty |
-| Features | API base URL | follows the provider |
-| Features | Model name | follows the provider |
-| Features | Temperature | `0.4` |
-| Features | Max tokens | `1500` |
-| Features | Placeholder image URL | placehold.co |
-| Features | Generations per hour, per user | `30` |
-| Features | Model timeout, in seconds | `180` |
-| Features | Theme tokens file (the default; the builder panel can override it per generation) | `default` |
+| Authentication (encrypted) | Shared fallback API key and one optional key per profile | empty |
+| Features | Default profile | first profile |
+| Features | Profiles | unlimited |
+| Each profile | Provider, endpoint and model | follows the provider |
+| Each profile | Brand, token policy, temperature, output limit, image, rate limit, timeout and theme | provider/theme defaults |
 
-The API key is stored on the encrypted auth tab and never reaches the browser.
+The API keys are stored on the encrypted auth tab and never reach the browser. The profile id sent with a generation is only an allowlisted identifier; the server resolves all connection details.
+
+### Profiles and quick starts
+
+The profile selector is shown in both assistants. The selected profile controls the complete runtime configuration for that request, including the local Mac mini Qwen endpoint, a cloud model, or any other OpenAI-compatible, Gemini or Anthropic connection. A missing or deleted profile id falls back to the configured default.
+
+The new-segment assistant also includes quick-start prompts for recent website visitors, company-name prefixes, Android contacts and inactive contacts. They only fill the prompt; the live Mautic 6/7 field catalog and the server-side validator still decide which filters may be applied.
 
 **Brand and tone of voice** is optional free text describing what you sell, who you are writing to, how formal to be, and anything to avoid. It is appended to the end of the system prompt, capped at 2000 characters because it travels on every generation. Leave it empty and the assistant still works, it just writes more generic copy. In a 12-case comparison, filling it in removed every exclamation mark from the output and roughly doubled how often the copy mentioned what the company actually makes.
 
@@ -379,7 +376,7 @@ cd ../plugins/AiEmailSectionsBundle
 npx jest
 ```
 
-135 PHP tests and 38 JS tests. The functional ones prove that the script is only injected while the integration is published, that the API key never reaches the browser, and that the endpoint refuses requests without CSRF.
+The PHP and JS suites cover profile selection, live-catalog segment compatibility, asset injection while the integration is published, API-key isolation from the browser, and CSRF rejection.
 
 Two things to know before writing tests here:
 

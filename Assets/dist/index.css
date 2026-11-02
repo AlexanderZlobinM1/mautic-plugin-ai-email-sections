@@ -38,6 +38,17 @@
   margin-bottom: 8px;
 }
 
+.gjs-assistant__profile {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 4px;
+  font-size: 12px;
+  color: inherit;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
 /* A roomier right panel. GrapesJS defaults the views container to 15% of the
  * viewport, which leaves the prompt textarea cramped on common screens. The
  * canvas has to give up the same width or it renders underneath the panel. */
@@ -59,6 +70,9 @@
 }
 .ai-segment-assistant__title { margin-bottom: 8px; font-weight: 600; }
 .ai-segment-assistant__prompt { width: 100%; resize: vertical; }
+.ai-segment-assistant__profile-label { display: block; margin-top: 10px; margin-bottom: 4px; font-weight: 600; }
+.ai-segment-assistant__quick-starts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ai-segment-assistant__quick-start { font-size: 12px; }
 .ai-segment-assistant__actions { margin-top: 8px; }
 .ai-segment-assistant__status { min-height: 20px; margin-top: 8px; font-size: 13px; }
 .ai-segment-assistant__status.is-error { color: #c92a2a; }

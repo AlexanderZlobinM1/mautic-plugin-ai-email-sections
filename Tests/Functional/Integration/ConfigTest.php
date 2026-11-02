@@ -147,6 +147,39 @@ final class ConfigTest extends MauticMysqlTestCase
         $this->assertSame('claude-sonnet-5', $config->getModel());
     }
 
+    public function testProfilesCanBeCompletelyDifferentAndShareTheSameName(): void
+    {
+        $this->persistIntegration([
+            'integration' => [
+                'default_profile' => 'local',
+                'profiles' => [
+                    [
+                        'id'       => 'local',
+                        'name'     => 'Writer',
+                        'provider' => Config::PROVIDER_OPENAI,
+                        'base_url' => 'http://mac-mini.test/v1',
+                        'model'    => 'qwen2.5:14b',
+                    ],
+                    [
+                        'id'       => 'cloud',
+                        'name'     => 'Writer',
+                        'provider' => Config::PROVIDER_ANTHROPIC,
+                        'model'    => 'claude-sonnet-5',
+                    ],
+                ],
+            ],
+        ]);
+
+        $config = $this->config();
+
+        $this->assertSame(['local', 'cloud'], array_column($config->getProfiles(), 'id'));
+        $this->assertSame('local', $config->getDefaultProfileId());
+        $this->assertSame('http://mac-mini.test/v1', $config->getBaseUrl('local'));
+        $this->assertSame('qwen2.5:14b', $config->getModel('local'));
+        $this->assertSame(Config::PROVIDER_ANTHROPIC, $config->getProvider('cloud'));
+        $this->assertSame('claude-sonnet-5', $config->getModel('cloud'));
+    }
+
     /**
      * The stored value goes straight into the HTTP client as the target of
      * server-side requests. A scheme other than http(s) has no legitimate use

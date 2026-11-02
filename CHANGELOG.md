@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0 - 2026-11-02
+
+- Add unlimited AI profiles with independent provider, endpoint, model, prompt, token, timeout and theme settings.
+- Keep profile API keys in Mautic's encrypted integration key store and choose the active profile for every generation.
+- Add segment quick-start templates and a profile selector to the email and segment assistants.
+- Tighten the segment prompt contract for Mautic 6/7 catalog differences and preserve strict live-catalog validation.
+
 ## 2.0.5 - 2026-08-31
 
 - Preserve the saved off state of the personalization-token switch in the

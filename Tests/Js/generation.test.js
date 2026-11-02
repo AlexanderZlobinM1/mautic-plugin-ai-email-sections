@@ -53,6 +53,7 @@ function openPromptUi(editor, component) {
     status: el.querySelector('.gjs-assistant__status'),
     label: el.querySelector('.gjs-assistant__target'),
     theme: el.querySelector('.gjs-assistant__theme'),
+    profile: el.querySelector('.gjs-assistant__profile'),
   };
 }
 
@@ -396,5 +397,31 @@ describe('theme selector', () => {
     const ui = openPromptUi(editor, new FakeComponent({ type: 'mj-text' }));
 
     expect(ui.theme).toBeNull();
+  });
+});
+
+describe('profile selector', () => {
+  test('sends the selected profile without exposing connection settings', async () => {
+    const editor = setup();
+    window.MauticAiEmailSectionsConfig.profiles = {
+      local: 'Local Qwen',
+      cloud: 'Cloud writer',
+    };
+    window.MauticAiEmailSectionsConfig.profile = 'local';
+    const placeholder = new FakeComponent({ type: 'assistant-placeholder', tagName: 'mj-text' });
+    buildSectionTree(editor, placeholder);
+    stubProvider({ mjml: GENERATED, attempts: 1, warnings: [] });
+
+    const ui = openPromptUi(editor, placeholder);
+    expect(Array.from(ui.profile.options).map((option) => option.value)).toEqual(['local', 'cloud']);
+    ui.profile.value = 'cloud';
+    ui.textarea.value = 'a cloud-ready hero';
+    ui.button.click();
+    await flush();
+
+    const body = JSON.parse(window.fetch.mock.calls[0][1].body);
+    expect(body.profile).toBe('cloud');
+    expect(body.model).toBeUndefined();
+    expect(body.api_key).toBeUndefined();
   });
 });

@@ -220,6 +220,37 @@
     var themes = config().themes || {};
     var themeIds = Object.keys(themes);
     var themeSelect = null;
+    var profiles = config().profiles || {};
+    var profileIds = Object.keys(profiles);
+    var profileSelect = null;
+
+    if (profileIds.length) {
+      profileSelect = document.createElement('select');
+      profileSelect.className = 'gjs-assistant__profile';
+      profileSelect.title = t(
+        'mautic.aiemailsections.profile.tooltip',
+        'Choose the AI profile for this generation.'
+      );
+
+      profileIds.forEach(function (id) {
+        var option = document.createElement('option');
+        option.value = id;
+        option.textContent = profiles[id];
+        profileSelect.appendChild(option);
+      });
+
+      profileSelect.value = component.get('assistantProfile') || config().profile || profileIds[0];
+      component.set('assistantProfile', profileSelect.value, { silent: true });
+      profileSelect.addEventListener('change', function () {
+        component.set('assistantProfile', profileSelect.value, { silent: true });
+        if (themeSelect && config().profileThemes && config().profileThemes[profileSelect.value]) {
+          var profileTheme = config().profileThemes[profileSelect.value];
+          if (themeIds.indexOf(profileTheme) !== -1) {
+            themeSelect.value = profileTheme;
+          }
+        }
+      });
+    }
 
     if (themeIds.length > 1) {
       themeSelect = document.createElement('select');
@@ -273,6 +304,14 @@
       wrapper.appendChild(themeLabel);
       wrapper.appendChild(themeSelect);
       wrapper.appendChild(themeHint);
+    }
+
+    if (profileSelect) {
+      var profileLabel = document.createElement('div');
+      profileLabel.className = 'gjs-assistant__label';
+      profileLabel.textContent = t('mautic.aiemailsections.profile.label', 'AI profile');
+      wrapper.appendChild(profileLabel);
+      wrapper.appendChild(profileSelect);
     }
 
     wrapper.appendChild(button);
@@ -334,6 +373,10 @@
       }
 
       var payload = { mode: editing ? 'edit' : 'create', prompt: prompt };
+
+      if (profileSelect) {
+        payload.profile = profileSelect.value;
+      }
 
       if (themeSelect) {
         payload.theme = themeSelect.value;

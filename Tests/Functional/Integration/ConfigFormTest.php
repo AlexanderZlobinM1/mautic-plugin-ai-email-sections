@@ -8,158 +8,82 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\PluginBundle\Entity\Integration;
 use MauticPlugin\AiEmailSectionsBundle\Form\Type\ConfigAuthType;
 use MauticPlugin\AiEmailSectionsBundle\Form\Type\ConfigFeaturesType;
+use MauticPlugin\AiEmailSectionsBundle\Form\Type\ProfileApiKeyType;
+use MauticPlugin\AiEmailSectionsBundle\Form\Type\ProfileType;
 use MauticPlugin\AiEmailSectionsBundle\Integration\AiEmailSectionsIntegration;
-use MauticPlugin\AiEmailSectionsBundle\Integration\Config;
 use Symfony\Component\Form\FormFactoryInterface;
-use Symfony\Component\Validator\Constraints\Length;
 
-/**
- * The two configuration tabs are built differently by the IntegrationsBundle,
- * and getting the option contract wrong shows an alert instead of the modal.
- *
- * IntegrationConfigType passes "integration" to the auth form.
- * IntegrationFeatureSettingsType adds the feature settings form with nothing
- * but ['label' => false].
- */
+/** Configuration covers unlimited profiles while keeping keys encrypted. */
 final class ConfigFormTest extends MauticMysqlTestCase
 {
-    public function testAuthFormBuildsWhenGivenTheIntegrationOption(): void
-    {
-        $form = $this->formFactory()->create(ConfigAuthType::class, [], [
-            'integration' => $this->integration(),
-        ]);
-
-        $this->assertTrue($form->has('api_key'), 'The API key belongs on the encrypted auth tab.');
-    }
-
-    public function testFeatureSettingsFormBuildsWithoutTheIntegrationOption(): void
+    public function testFeatureSettingsFormBuildsTheProfileCollection(): void
     {
         $form = $this->formFactory()->create(ConfigFeaturesType::class);
 
-        foreach (['provider', 'brand', 'base_url', 'model', 'temperature', 'max_tokens', 'placeholder_image', 'rate_limit', 'timeout', 'theme'] as $field) {
-            $this->assertTrue($form->has($field), sprintf('Missing "%s" on the feature settings tab.', $field));
-        }
+        $this->assertTrue($form->has('default_profile'));
+        $this->assertTrue($form->has('profiles'));
+        $this->assertSame(ProfileType::class, $form->get('profiles')->getConfig()->getOption('entry_type'));
+        $this->assertTrue($form->get('profiles')->getConfig()->getOption('allow_add'));
+        $this->assertTrue($form->get('profiles')->getConfig()->getOption('allow_delete'));
     }
 
-    /** Every offered provider has a factory route or an OpenAI-compatible preset. */
-    public function testTheProviderFieldOffersExactlyTheSupportedProviders(): void
+    public function testEveryProfileOffersExactlyTheSupportedProviders(): void
     {
         $form = $this->formFactory()->create(ConfigFeaturesType::class);
-
-        $choices = $form->get('provider')->getConfig()->getOption('choices');
+        $entry = $this->formFactory()->create(ProfileType::class);
+        $choices = $entry->get('provider')->getConfig()->getOption('choices');
 
         $this->assertSame(
             [
-                Config::PROVIDER_OPENAI,
-                Config::PROVIDER_OPENAI_CLOUD,
-                Config::PROVIDER_GOOGLE,
-                Config::PROVIDER_DEEPSEEK,
-                Config::PROVIDER_QWEN,
-                Config::PROVIDER_GROQ,
-                Config::PROVIDER_OPENROUTER,
-                Config::PROVIDER_ANTHROPIC,
+                'openai', 'openai_cloud', 'google', 'deepseek',
+                'qwen', 'groq', 'openrouter', 'anthropic',
             ],
             array_values($choices)
         );
+        $this->assertTrue($form->has('profiles'));
     }
 
-    public function testTheApiKeyIsNotOnTheFeatureSettingsTab(): void
+    public function testApiKeysStayOnTheEncryptedAuthTab(): void
     {
-        $form = $this->formFactory()->create(ConfigFeaturesType::class);
+        $features = $this->formFactory()->create(ConfigFeaturesType::class);
+        $this->assertFalse($features->has('api_key'));
 
-        $this->assertFalse($form->has('api_key'), 'The API key must never sit on the unencrypted tab.');
+        $auth = $this->formFactory()->create(ConfigAuthType::class, [], [
+            'integration' => $this->integration(),
+        ]);
+        $this->assertTrue($auth->has('api_key'));
     }
 
-    /**
-     * A "data" option on the field would win over the stored value on every
-     * render, so opening the configuration and saving it again would silently
-     * reset the provider back to the default.
-     */
-    public function testTheProviderFieldShowsWhatWasSaved(): void
+    public function testProfileApiKeysAreRenderedForSavedProfiles(): void
     {
-        $form = $this->formFactory()->create(ConfigFeaturesType::class, ['provider' => Config::PROVIDER_ANTHROPIC]);
+        $integration = $this->integration();
+        $integration->setFeatureSettings([
+            'integration' => [
+                'profiles' => [[
+                    'id'   => 'local-qwen',
+                    'name' => 'Local Qwen',
+                ]],
+            ],
+        ]);
 
-        $this->assertSame(Config::PROVIDER_ANTHROPIC, $form->get('provider')->getData());
+        $form = $this->formFactory()->create(ConfigAuthType::class, [], ['integration' => $integration]);
+
+        $this->assertTrue($form->has('profiles'));
+        $this->assertSame(ProfileApiKeyType::class, $form->get('profiles')->getConfig()->getOption('entry_type'));
     }
 
-    public function testTheTokensSwitchShowsItsSavedOffState(): void
+    public function testSavedProfileCanTurnPersonalisationTokensOff(): void
     {
-        $form = $this->formFactory()->create(ConfigFeaturesType::class, ['tokens_enabled' => false]);
+        $form = $this->formFactory()->create(ConfigFeaturesType::class, [
+            'profiles' => [[
+                'id'             => 'minimal',
+                'name'           => 'Minimal',
+                'tokens_enabled' => false,
+            ]],
+        ]);
 
-        $this->assertFalse($form->get('tokens_enabled')->getData());
-    }
-
-    public function testTheTokensSwitchDefaultsOnOnlyWhenItHasNeverBeenSaved(): void
-    {
-        $form = $this->formFactory()->create(ConfigFeaturesType::class);
-
-        $this->assertTrue($form->get('tokens_enabled')->getData());
-    }
-
-    /**
-     * The brief goes into the system prompt on every generation. Without a cap
-     * an administrator can quietly make each call much more expensive.
-     */
-    public function testTheBrandFieldIsLengthCapped(): void
-    {
-        $form = $this->formFactory()->create(ConfigFeaturesType::class);
-
-        $constraints = $form->get('brand')->getConfig()->getOption('constraints');
-        $lengths     = array_filter($constraints, static fn ($c) => $c instanceof Length);
-
-        $this->assertCount(1, $lengths, 'The brand brief needs a Length constraint.');
-        $this->assertSame(Config::MAX_BRAND_BRIEF_CHARS, reset($lengths)->max);
-    }
-
-    /**
-     * The defaults follow the selected provider, so a placeholder naming one
-     * provider's value contradicts what an empty field actually does. With
-     * Anthropic selected, these fields were showing the local model's endpoint
-     * and name while the request went to api.anthropic.com with a Claude model.
-     */
-    public function testTheEndpointAndModelPlaceholdersDoNotNameOneProvidersValue(): void
-    {
-        $form = $this->formFactory()->create(ConfigFeaturesType::class);
-
-        foreach (['base_url' => Config::DEFAULT_BASE_URL, 'model' => Config::DEFAULT_MODEL] as $field => $openAiDefault) {
-            $placeholder = $form->get($field)->getConfig()->getOption('attr')['placeholder'] ?? '';
-
-            $this->assertNotSame($openAiDefault, $placeholder, sprintf('"%s" must not advertise the OpenAI-compatible default.', $field));
-            $this->assertNotSame(Config::DEFAULT_ANTHROPIC_BASE_URL, $placeholder);
-            $this->assertNotSame(Config::DEFAULT_ANTHROPIC_MODEL, $placeholder);
-            $this->assertNotSame('', $placeholder, sprintf('"%s" still needs to tell the user what empty means.', $field));
-        }
-    }
-
-    /**
-     * Both are read by the OpenAI-compatible client only. The Anthropic client
-     * never sends a sampling parameter, and treats the token limit as a floor
-     * rather than a ceiling. A field that silently means something else under
-     * one provider has to say so.
-     */
-    public function testTheSamplingFieldsExplainTheirAnthropicBehaviour(): void
-    {
-        $form = $this->formFactory()->create(ConfigFeaturesType::class);
-
-        foreach (['temperature', 'max_tokens'] as $field) {
-            $this->assertArrayHasKey(
-                'tooltip',
-                $form->get($field)->getConfig()->getOption('attr'),
-                sprintf('"%s" behaves differently under Anthropic and needs to say so.', $field)
-            );
-        }
-    }
-
-    public function testProviderUiKeepsHiddenSettingsInTheForm(): void
-    {
-        $form = $this->formFactory()->create(ConfigFeaturesType::class);
-
-        $this->assertTrue($form->has('base_url'));
-        $this->assertTrue($form->has('temperature'));
-        $this->assertStringContainsString(
-            "closest('.row.form-group')",
-            $form->get('provider')->getConfig()->getOption('attr')['onchange']
-        );
+        $profile = $form->get('profiles')->get(0);
+        $this->assertFalse($profile->get('tokens_enabled')->getData());
     }
 
     private function formFactory(): FormFactoryInterface

@@ -46,7 +46,7 @@
     ).filter(Boolean);
   }
 
-  function requestPlan(prompt, catalog) {
+  function requestPlan(prompt, catalog, profile) {
     return fetch(config().segmentEndpoint, {
       method: 'POST',
       credentials: 'same-origin',
@@ -55,7 +55,7 @@
         'X-Requested-With': 'XMLHttpRequest',
         'X-CSRF-Token': window.mauticAjaxCsrf || '',
       },
-      body: JSON.stringify({ prompt: prompt, catalog: catalog }),
+      body: JSON.stringify({ prompt: prompt, catalog: catalog, profile: profile }),
     }).then(function (response) {
       return response.json().catch(function () { return {}; }).then(function (data) {
         if (!response.ok) {
@@ -295,15 +295,49 @@
     panel.innerHTML =
       '<div class="ai-segment-assistant__title">' + t('mautic.aiemailsections.segment.title', 'AI segment assistant') + '</div>' +
       '<textarea class="form-control ai-segment-assistant__prompt" rows="3"></textarea>' +
+      '<div class="ai-segment-assistant__quick-starts"></div>' +
+      '<label class="ai-segment-assistant__profile-label">' + t('mautic.aiemailsections.profile.label', 'AI profile') + '</label>' +
+      '<select class="form-control ai-segment-assistant__profile"></select>' +
       '<div class="ai-segment-assistant__actions"><button type="button" class="btn btn-primary ai-segment-assistant__run">' +
       t('mautic.aiemailsections.segment.generate', 'Prepare filters') + '</button></div>' +
       '<div class="ai-segment-assistant__status" role="status"></div>';
     anchor.parentNode.insertBefore(panel, anchor);
 
     var prompt = panel.querySelector('.ai-segment-assistant__prompt');
+    var profileSelect = panel.querySelector('.ai-segment-assistant__profile');
+    var quickStarts = panel.querySelector('.ai-segment-assistant__quick-starts');
     var button = panel.querySelector('.ai-segment-assistant__run');
     var status = panel.querySelector('.ai-segment-assistant__status');
     prompt.placeholder = t('mautic.aiemailsections.segment.placeholder', 'Describe who should be included in the segment.');
+
+    var profiles = config().profiles || {};
+    Object.keys(profiles).forEach(function (id) {
+      var option = document.createElement('option');
+      option.value = id;
+      option.textContent = profiles[id];
+      profileSelect.appendChild(option);
+    });
+    profileSelect.value = config().profile || Object.keys(profiles)[0] || '';
+
+    (config().quickStarts || []).forEach(function (quickStart) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn btn-secondary ai-segment-assistant__quick-start';
+      button.textContent = t(quickStart.label, quickStart.prompt);
+      button.title = quickStart.prompt;
+      button.addEventListener('click', function () {
+        prompt.value = quickStart.prompt;
+        prompt.focus();
+      });
+      quickStarts.appendChild(button);
+    });
+
+    if (!Object.keys(profiles).length) {
+      profileSelect.parentNode.removeChild(profileSelect);
+      panel.querySelector('.ai-segment-assistant__profile-label').parentNode.removeChild(
+        panel.querySelector('.ai-segment-assistant__profile-label')
+      );
+    }
 
     function setStatus(message, kind) {
       status.textContent = message || '';
@@ -321,7 +355,7 @@
       button.disabled = true;
       setStatus(t('mautic.aiemailsections.segment.loading', 'Preparing and validating filters...'), 'loading');
 
-      requestPlan(text, catalog)
+      requestPlan(text, catalog, profileSelect.value)
         .then(applyPlan)
         .then(function () {
           button.disabled = false;
