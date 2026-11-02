@@ -4,7 +4,7 @@ const path = require('path');
 const SOURCE = path.join(__dirname, '../../Assets/src/config.js');
 
 function loadConfig() {
-  document.body.innerHTML = '<div class="ai-profile-collection"><div class="ai-profile-row"><input name="profiles[0][id]" value="local"></div></div>';
+  document.body.innerHTML = '<div class="form-group"><label class="control-label">AI profiles</label><div class="controls"><div class="ai-profile-collection"><div class="ai-profile-row"><input name="profiles[0][id]" value="local"></div></div></div></div>';
   document.querySelector('.ai-profile-collection').setAttribute(
     'data-prototype',
     '<div class="ai-profile-row"><input name="profiles[__name__][id]"></div>'
@@ -20,6 +20,7 @@ describe('profile configuration editor', () => {
     loadConfig();
 
     const collection = document.querySelector('.ai-profile-collection');
+    expect(collection.closest('.form-group').classList.contains('ai-profile-form-group')).toBe(true);
     const add = document.querySelector('.ai-profile-add');
     expect(add).not.toBeNull();
 

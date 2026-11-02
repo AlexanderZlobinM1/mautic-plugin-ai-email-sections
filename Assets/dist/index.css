@@ -60,6 +60,76 @@
  * panel edge instead. */
 .gjs-pn-options { right: 300px; }
 
+/* Integration settings: keep the unlimited profile collection inside the
+ * modal instead of inheriting Mautic's nested label/control columns. */
+.ai-profile-form-group > .control-label,
+.ai-profile-form-group > .controls {
+  float: none;
+  width: 100%;
+}
+.ai-profile-form-group > .control-label {
+  display: block;
+  margin-bottom: 8px;
+}
+.ai-profile-form-group > .controls {
+  clear: both;
+}
+.ai-profile-collection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+  width: 100%;
+  margin: 0;
+}
+.ai-profile-collection > .ai-profile-row {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #dfe3e8;
+  border-radius: 6px;
+  background: #fafbfc;
+}
+.ai-profile-row > .form-group {
+  display: grid;
+  grid-template-columns: minmax(125px, 34%) minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+.ai-profile-row > .form-group > .control-label,
+.ai-profile-row > .form-group > .controls {
+  float: none;
+  width: auto;
+  min-width: 0;
+}
+.ai-profile-row > .form-group > .control-label {
+  padding-top: 7px;
+}
+.ai-profile-row .form-control,
+.ai-profile-row select,
+.ai-profile-row textarea,
+.ai-profile-row input {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.ai-profile-row textarea {
+  min-height: 72px;
+}
+.ai-profile-row > .ai-profile-remove {
+  margin-top: 4px;
+}
+@media (max-width: 720px) {
+  .ai-profile-collection {
+    grid-template-columns: 1fr;
+  }
+  .ai-profile-row > .form-group {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .ai-profile-row > .form-group > .control-label {
+    padding-top: 0;
+  }
+}
+
 /* Native new-segment form assistant. */
 .ai-segment-assistant {
   margin-bottom: 16px;

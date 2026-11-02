@@ -65,12 +65,12 @@ class AssetsSubscriber implements EventSubscriberInterface
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
 
         $assetsEvent->addScriptDeclaration('window.MauticAiEmailSectionsConfig = '.$settings.';', 'head');
-        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/index.js?v=3.0.0');
-        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/config.js?v=3.0.0');
+        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/index.js?v=3.0.1');
+        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/config.js?v=3.0.1');
         // Mautic changes admin pages through AJAX, so the segment runtime must
         // already be present before the user navigates to the creation form.
-        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/segment.js?v=3.0.0');
-        $assetsEvent->addStylesheet('plugins/AiEmailSectionsBundle/Assets/dist/index.css?v=3.0.0');
+        $assetsEvent->addScript('plugins/AiEmailSectionsBundle/Assets/dist/segment.js?v=3.0.1');
+        $assetsEvent->addStylesheet('plugins/AiEmailSectionsBundle/Assets/dist/index.css?v=3.0.1');
     }
 
     /**

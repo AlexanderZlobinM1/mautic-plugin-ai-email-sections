@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.1 - 2026-11-02
+
+- Fix the Features tab profile editor layout so profile cards stay inside the
+  Mautic settings modal and reflow cleanly on narrow screens.
+
 ## 3.0.0 - 2026-11-02
 
 - Add unlimited AI profiles with independent provider, endpoint, model, prompt, token, timeout and theme settings.

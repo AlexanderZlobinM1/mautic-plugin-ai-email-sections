@@ -24,6 +24,10 @@
       }
 
       collection.setAttribute('data-ai-profile-ready', '1');
+      var formGroup = collection.closest('.form-group');
+      if (formGroup) {
+        formGroup.classList.add('ai-profile-form-group');
+      }
       var counter = collection.querySelectorAll('.ai-profile-row').length;
       var add = document.createElement('button');
       add.type = 'button';
